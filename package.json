@@ -11,7 +11,10 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
+		"lint": "prettier --check . && eslint .",
+		"db:push": "drizzle-kit push",
+		"db:migrate": "drizzle-kit migrate",
+		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
@@ -41,9 +44,13 @@
 		"vite-plugin-mkcert": "^1.17.8"
 	},
 	"dependencies": {
+		"@faker-js/faker": "^9.7.0",
+		"@libsql/client": "^0.15.4",
 		"@lucide/svelte": "^0.503.0",
 		"@tailwindcss/vite": "^4.1.4",
+		"crypto": "^1.0.1",
 		"dotenv": "^16.5.0",
+		"drizzle-orm": "^0.43.1",
 		"tailwindcss": "^4.1.4"
 	},
 	"pnpm": {
