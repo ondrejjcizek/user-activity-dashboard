@@ -1,1 +1,56 @@
 @import 'tailwindcss';
+
+@theme {
+	--color-background: light-dark(oklch(100% 0 106.37), oklch(13.71% 0.036 258.53));
+	--color-foreground: light-dark(oklch(23.76% 0 0), oklch(91.57% 0 0));
+	--color-card: light-dark(oklch(100% 0 106.37), oklch(13.71% 0.036 258.53));
+	--color-card-foreground: light-dark(oklch(13.71% 0.036 258.53), oklch(98.38% 0.0035 247.86));
+	--color-popover: light-dark(oklch(100% 0 106.37), oklch(13.71% 0.036 258.53));
+	--color-popover-foreground: light-dark(oklch(13.71% 0.036 258.53), oklch(98.38% 0.0035 247.86));
+	--color-primary: light-dark(oklch(20.79% 0.0399 265.73), oklch(98.38% 0.0035 247.86));
+	--color-primary-foreground: light-dark(oklch(98.38% 0.0035 247.86), oklch(20.79% 0.0399 265.73));
+	--color-secondary: light-dark(oklch(96.84% 0.0068 247.9), oklch(28% 0.0369 259.97));
+	--color-secondary-foreground: light-dark(
+		oklch(20.79% 0.0399 265.73),
+		oklch(98.38% 0.0035 247.86)
+	);
+	--color-muted: light-dark(oklch(96.76% 0.0013 286.38), oklch(28% 0.0369 259.97));
+	--color-muted-foreground: light-dark(oklch(55.19% 0.0137 285.94), oklch(71.07% 0.0351 256.79));
+	--color-accent: light-dark(oklch(96.84% 0.0068 247.9), oklch(28% 0.0369 259.97));
+	--color-accent-foreground: light-dark(oklch(20.79% 0.0399 265.73), oklch(98.38% 0.0035 247.86));
+	--color-destructive: light-dark(oklch(63.68% 0.2078 25.33), oklch(39.59% 0.1331 25.72));
+	--color-destructive-foreground: light-dark(
+		oklch(98.38% 0.0035 247.86),
+		oklch(98.38% 0.0034 247.86)
+	);
+	--color-border: light-dark(oklch(93.06% 0.0125 38.2), oklch(28% 0.0369 259.97));
+	--color-input: light-dark(oklch(92.9% 0.0126 255.53), oklch(28% 0.0369 259.97));
+	--color-ring: light-dark(oklch(13.71% 0.036 258.53), oklch(86.88% 0.0198 252.85));
+	--color-sidebar: light-dark(oklch(98.23% 0.0052 258.33), oklch(22.67% 0 0));
+	--color-sidebar-foreground: light-dark(oklch(37.05% 0.012 285.8), oklch(96.76% 0.0013 286.38));
+	--color-sidebar-primary: light-dark(oklch(21.03% 0.0059 285.88), oklch(48.78% 0.217 264.39));
+	--color-sidebar-primary-foreground: light-dark(oklch(98.48% 0 0), oklch(100% 0 106.37));
+	--color-sidebar-accent: light-dark(oklch(96.76% 0.0013 286.38), oklch(27.41% 0.0055 286.03));
+	--color-sidebar-accent-foreground: light-dark(
+		oklch(21.03% 0.0059 285.88),
+		oklch(96.76% 0.0013 286.38)
+	);
+	--color-sidebar-border: light-dark(oklch(92.78% 0.0058 264.53), oklch(27.41% 0.0055 286.03));
+	--color-sidebar-ring: light-dark(oklch(62.32% 0.1879 259.8), oklch(62.32% 0.1879 259.8));
+
+	--radius: 0.5rem;
+
+	--radius-lg: var(--radius);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-sm: calc(var(--radius) - 4px);
+}
+
+html {
+	background-color: theme(--color-gray-100);
+}
+
+body {
+	font-family: 'Geist', Avenir, Helvetica, Arial, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}

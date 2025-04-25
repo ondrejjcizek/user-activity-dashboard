@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import 'unfonts.css';
 	import '../app.css';
 
 	type Props = {
@@ -9,6 +10,4 @@
 	const { children }: Props = $props();
 </script>
 
-<main>
-	{@render children()}
-</main>
+{@render children()}
