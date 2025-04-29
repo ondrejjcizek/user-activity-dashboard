@@ -13,7 +13,7 @@
 	import { Send } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import * as Alert from '$lib/components/ui/alert';
-	import { fly } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 
 	type Props = {
 		data: PageServerData;
@@ -128,14 +128,47 @@
 	};
 
 	let activeTab = $state('login');
+
+	let contentEl: HTMLElement | null = null;
+	let contentElChilds: HTMLElement[] | null;
+	let cardHeight = $state('0');
+
+	function updateCardHeight() {
+		console.log(activeTab);
+
+		contentEl = document.querySelector('.cart-content');
+		if (!contentEl) return;
+
+		const nodeList = contentEl.querySelectorAll(':scope > div');
+		contentElChilds = Array.from(nodeList) as HTMLElement[];
+
+		// Get total content height
+		const childrenHeight = contentElChilds.reduce((sum, el) => sum + el.offsetHeight, 0);
+
+		// Get computed padding from styles
+		const style = window.getComputedStyle(contentEl);
+		const paddingTop = parseFloat(style.paddingTop);
+		const paddingBottom = parseFloat(style.paddingBottom);
+
+		const totalHeight = childrenHeight + paddingTop + paddingBottom;
+
+		cardHeight = `${totalHeight}px`;
+	}
+
+	$effect(() => {
+		updateCardHeight();
+
+		window?.addEventListener('resize', () => {
+			updateCardHeight();
+		});
+	});
 </script>
 
 <div class="flex min-h-screen items-center justify-center">
 	<div class="flex h-auto w-full items-center justify-center scroll-auto">
 		<Card.Root
-			class={`w-full max-w-sm overflow-hidden rounded-lg bg-white p-4 shadow-md transition-[height] duration-1000 ease-in-out md:max-w-md md:p-8 dark:border-gray-400 dark:bg-gray-700 ${
-				activeTab === 'register' ? 'h-[803px]' : 'h-[651px]'
-			}`}
+			class={`cart-content w-full max-w-sm overflow-hidden rounded-lg bg-white p-0 shadow-md transition-[height] duration-1000 ease-in-out md:max-w-md md:p-8 dark:border-gray-400 dark:bg-gray-700`}
+			style={activeTab === 'register' ? `height: ${cardHeight}` : `height: ${cardHeight}`}
 		>
 			<!-- {#if data.session}
 				<Card.Header class="text-center">
@@ -190,11 +223,11 @@
 						<Tabs.Trigger value="register">Register</Tabs.Trigger>
 						<Tabs.Trigger value="login">Login</Tabs.Trigger>
 					</Tabs.List>
-					<Tabs.Content value="register" class="transition-[height] duration-1000 ease-in-out">
-						{#key activeTab}
-							<div transition:fly={{ x: -800, duration: 1000 }} class="relative">
+					<Tabs.Content value="register" class="transition-[height] duration-8000 ease-in-out">
+						{#if activeTab === 'register'}
+							<div transition:fade={{ duration: 800 }}>
 								<form
-									class="absolute top-0 w-full space-y-4 text-left"
+									class="w-full space-y-4 text-left"
 									method="POST"
 									use:registerUserEnhance
 									onsubmit={registerForm.submit}
@@ -261,13 +294,13 @@
 									</Alert.Root>
 								{/if}
 							</div>
-						{/key}
+						{/if}
 					</Tabs.Content>
 					<Tabs.Content value="login">
-						{#key activeTab}
-							<div transition:fly={{ x: 800, duration: 1000 }} class="relative">
+						{#if activeTab === 'login'}
+							<div transition:fade={{ duration: 800 }}>
 								<form
-									class="absolute top-0 w-full space-y-4 text-left"
+									class="w-full space-y-4 text-left"
 									method="POST"
 									use:loginUserEnhance
 									onsubmit={loginForm.submit}
@@ -310,7 +343,7 @@
 									</Alert.Root>
 								{/if}
 							</div>
-						{/key}
+						{/if}
 					</Tabs.Content>
 				</Tabs.Root>
 			</Card.Footer>
