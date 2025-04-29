@@ -46,7 +46,6 @@
 }
 
 html {
-	background-color: theme(--color-gray-100);
 	interpolate-size: allow-keywords;
 }
 

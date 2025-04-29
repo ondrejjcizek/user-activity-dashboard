@@ -5,7 +5,6 @@
 	import '../app.css';
 	import type { LayoutServerData } from './$types';
 	import { toast } from 'svelte-sonner';
-	import { fade } from 'svelte/transition';
 
 	type Props = {
 		children: Snippet;
@@ -27,7 +26,7 @@
 	$effect(() => {
 		const url = new URL(window.location.href);
 		const error = url.searchParams.get('error');
-		const success = url.searchParams.get('success');
+		// const success = url.searchParams.get('success');
 
 		if (error === 'unauthenticated') {
 			toast.info('Welcome back!');
@@ -54,6 +53,6 @@
 </script>
 
 <Toaster {position} duration={3500} richColors />
-<main transition:fade={{ duration: 600 }}>
+<main class="bg-gray-100 p-6 dark:bg-gray-900">
 	{@render children()}
 </main>
