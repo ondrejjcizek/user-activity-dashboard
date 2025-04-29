@@ -88,6 +88,10 @@ const config = {
         		"accordion-up": "accordion-up 0.2s ease-out",
        			"caret-blink": "caret-blink 1.25s ease-out infinite",
       		},
+			transitionTimingFunction: {
+				'in-expo': 'cubic-bezier(0.95, 0.05, 0.795, 0.035)',
+				'out-expo': 'cubic-bezier(0.19, 1, 0.22, 1)',
+			  }
 		},
 	},
 	plugins: [tailwindcssAnimate],

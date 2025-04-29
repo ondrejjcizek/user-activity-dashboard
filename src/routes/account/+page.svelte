@@ -46,19 +46,19 @@
 	};
 </script>
 
-<div class="container mx-auto px-3 py-6 md:px-6">
+<div class="container mx-auto">
 	{#if !data.session}
 		<div class="bg-destructive/10 flex items-center justify-center rounded-lg p-8">
 			<AlertCircle class="text-destructive mr-2 h-5 w-5" />
 			<p class="text-destructive font-medium">No active session!</p>
 		</div>
 	{:else}
-		<div class="grid gap-6 md:grid-cols-7">
+		<div class="kokot flex flex-col gap-4">
 			<!-- User Profile Card -->
-			<Card.Root class="md:col-span-3">
+			<Card.Root class="mx-auto w-full max-w-md">
 				<Card.Header class="pb-4">
 					<div class="flex items-start justify-between gap-4">
-						<div class="flex gap-4">
+						<div class="flex flex-wrap gap-4">
 							<Avatar.Root class="border-primary/10 h-16 w-16 border-2">
 								<Avatar.Image
 									src={data.session.user.image || 'https://avatar.iran.liara.run/public/boy'}
@@ -92,7 +92,9 @@
 								<Calendar class="text-muted-foreground mr-2 h-4 w-4" />
 								<span class="text-muted-foreground">Joined</span>
 							</div>
-							<span class="font-medium">{formatDate(data.activity.createdAt)}</span>
+							<span class="text-xs font-medium md:text-sm"
+								>{formatDate(data.activity.createdAt)}</span
+							>
 						</div>
 
 						<div class="flex items-center justify-between">
@@ -100,7 +102,7 @@
 								<Clock class="text-muted-foreground mr-2 h-4 w-4" />
 								<span class="text-muted-foreground">Last active</span>
 							</div>
-							<span class="font-medium">
+							<span class="text-xs font-medium md:text-sm">
 								{data.activity.lastActive ? formatDate(data.activity.lastActive) : 'Never'}
 							</span>
 						</div>
@@ -131,7 +133,7 @@
 			</Card.Root>
 
 			<!-- Login History Card -->
-			<Card.Root class="md:col-span-4">
+			<Card.Root class="w-full">
 				<Card.Header>
 					<Card.Title class="flex items-center">
 						<Shield class="mr-2 h-5 w-5" />
@@ -141,56 +143,58 @@
 				</Card.Header>
 				<Card.Content>
 					<div class="rounded-md border">
-						<Table.Root>
-							<Table.Header>
-								<Table.Row>
-									<Table.Head class="w-[180px]">
-										<div class="flex items-center">
-											<Calendar class="mr-2 h-4 w-4" />
-											Date
-										</div>
-									</Table.Head>
-									<Table.Head>
-										<div class="flex items-center">
-											<Smartphone class="mr-2 h-4 w-4" />
-											Device
-										</div>
-									</Table.Head>
-									<Table.Head>
-										<div class="flex items-center">
-											<Globe class="mr-2 h-4 w-4" />
-											Browser
-										</div>
-									</Table.Head>
-									<Table.Head>
-										<div class="flex items-center">
-											<MapPin class="mr-2 h-4 w-4" />
-											IP
-										</div>
-									</Table.Head>
-								</Table.Row>
-							</Table.Header>
-							<Table.Body>
-								{#each data.activity.history as entry}
+						<div class="kokot max-w-[calc(100vw-110px)] overflow-x-scroll">
+							<Table.Root>
+								<Table.Header>
 									<Table.Row>
-										<Table.Cell class="font-medium">
-											{formatDate(entry.date)}
-										</Table.Cell>
-										<Table.Cell>{entry.device}</Table.Cell>
-										<Table.Cell>{entry.browser}</Table.Cell>
-										<Table.Cell class="font-mono text-xs">{entry.ip}</Table.Cell>
+										<Table.Head class="w-[180px]">
+											<div class="flex items-center">
+												<Calendar class="mr-2 h-4 w-4" />
+												Date
+											</div>
+										</Table.Head>
+										<Table.Head>
+											<div class="flex items-center">
+												<Smartphone class="mr-2 h-4 w-4" />
+												Device
+											</div>
+										</Table.Head>
+										<Table.Head>
+											<div class="flex items-center">
+												<Globe class="mr-2 h-4 w-4" />
+												Browser
+											</div>
+										</Table.Head>
+										<Table.Head>
+											<div class="flex items-center">
+												<MapPin class="mr-2 h-4 w-4" />
+												IP
+											</div>
+										</Table.Head>
 									</Table.Row>
-								{/each}
-							</Table.Body>
-						</Table.Root>
+								</Table.Header>
+								<Table.Body>
+									{#each data.activity.history as entry}
+										<Table.Row>
+											<Table.Cell class="font-medium">
+												{formatDate(entry.date)}
+											</Table.Cell>
+											<Table.Cell>{entry.device}</Table.Cell>
+											<Table.Cell>{entry.browser}</Table.Cell>
+											<Table.Cell class="font-mono text-xs">{entry.ip}</Table.Cell>
+										</Table.Row>
+									{/each}
+								</Table.Body>
+							</Table.Root>
+						</div>
 					</div>
 				</Card.Content>
-				<Card.Footer class="flex justify-end">
+				<!-- <Card.Footer class="flex justify-end">
 					<Button variant="outline" size="sm">
 						<Shield class="mr-2 h-4 w-4" />
 						Security Settings
 					</Button>
-				</Card.Footer>
+				</Card.Footer> -->
 			</Card.Root>
 		</div>
 	{/if}

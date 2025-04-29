@@ -5,15 +5,17 @@
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
 	import { superForm } from 'sveltekit-superforms';
-	import * as Card from '$lib/components/ui/card/index.js';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageServerData } from './$types';
 	import { Button } from '$lib/components/ui/button';
+	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { Send } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import * as Alert from '$lib/components/ui/alert';
-	import { fade, fly } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
+	import { Separator } from '$lib/components/ui/separator';
+	import Spinner from '$lib/components/Spinner.svelte';
+	import type { PageServerData } from './$types';
 
 	type Props = {
 		data: PageServerData;
@@ -28,10 +30,9 @@
 		taintedMessage: null,
 		validators: zodClient(UserLoginZodSchema),
 		onSubmit: async ({ formData }) => {
+			const email = formData.get('email')?.toString() ?? '';
+			const password = formData.get('password')?.toString() ?? '';
 			try {
-				const email = formData.get('email')?.toString() ?? '';
-				const password = formData.get('password')?.toString() ?? '';
-
 				await signInEmail(email, password);
 			} catch (err) {
 				console.error('🔥 Login error:', err);
@@ -40,24 +41,39 @@
 		}
 	});
 
-	const { form: loginUserForm, message: loginMessage, enhance: loginUserEnhance } = loginForm;
+	const {
+		form: loginUserForm,
+		message: loginMessage,
+		enhance: baseLoginEnhance,
+		delayed: loginDelayed,
+		timeout
+	} = loginForm;
+
+	const loginUserEnhance = (el: HTMLFormElement) =>
+		baseLoginEnhance(el, {
+			onResult: async ({ result }) => {
+				if (result.type === 'success') {
+					await new Promise((resolve) => setTimeout(resolve, 2000));
+				}
+			}
+		});
 
 	const registerForm = superForm(data.registerForm, {
 		resetForm: true,
 		taintedMessage: null,
 		validators: zodClient(RegisterUserZodSchema),
+		delayMs: 100,
+		timeoutMs: 1000,
 		onSubmit: async ({ formData }) => {
-			console.log(formData);
+			const firstName = formData.get('firstName')?.toString() ?? '';
+			const lastName = formData.get('lastName')?.toString() ?? '';
+			const email = formData.get('email')?.toString() ?? '';
+			const password = formData.get('password')?.toString() ?? '';
 			try {
-				const firstName = formData.get('firstName')?.toString() ?? '';
-				const lastName = formData.get('lastName')?.toString() ?? '';
-				const email = formData.get('email')?.toString() ?? '';
-				const password = formData.get('password')?.toString() ?? '';
-
 				await signUpEmail(firstName, lastName, email, password);
 			} catch (err) {
-				console.error('🔥 Login error:', err);
-				toast.error('Login error');
+				console.error('🔥 Registration error:', err);
+				toast.error('Registration error');
 			}
 		}
 	});
@@ -65,7 +81,8 @@
 	const {
 		form: registerUserForm,
 		message: registerMessage,
-		enhance: registerUserEnhance
+		enhance: registerUserEnhance,
+		delayed: registerDelayed
 	} = registerForm;
 
 	const signInGithub = async () => {
@@ -91,27 +108,16 @@
 		password: string
 	) => {
 		await authClient.signUp.email(
+			{ email, password, name: `${firstName} ${lastName}`, callbackURL: '/account' },
 			{
-				email,
-				password,
-				name: `${firstName} ${lastName}`,
-				callbackURL: '/account'
-			},
-			{
-				onError: (ctx) => {
-					alert(ctx.error.message);
-				}
+				onError: (ctx) => alert(ctx.error.message)
 			}
 		);
 	};
 
 	const signInEmail = async (email: string, password: string) => {
 		await authClient.signIn.email(
-			{
-				email,
-				password,
-				callbackURL: '/account'
-			},
+			{ email, password, callbackURL: '/account' },
 			{
 				onError: (ctx) => {
 					if (ctx.error.status === 403) {
@@ -120,7 +126,7 @@
 					alert(ctx.error.message);
 					console.log(ctx.error);
 				},
-				onSuccess: (ctx) => {
+				onSuccess: () => {
 					invalidateAll();
 				}
 			}
@@ -128,28 +134,20 @@
 	};
 
 	let activeTab = $state('login');
-
-	let contentEl: HTMLElement | null = null;
-	let contentElChilds: HTMLElement[] | null;
 	let cardHeight = $state('0');
+	let contentEl: HTMLElement | null = null;
+	let contentElChilds: HTMLElement[] | null = null;
 
 	function updateCardHeight() {
-		console.log(activeTab);
-
 		contentEl = document.querySelector('.cart-content');
 		if (!contentEl) return;
 
 		const nodeList = contentEl.querySelectorAll(':scope > div');
 		contentElChilds = Array.from(nodeList) as HTMLElement[];
-
-		// Get total content height
 		const childrenHeight = contentElChilds.reduce((sum, el) => sum + el.offsetHeight, 0);
-
-		// Get computed padding from styles
 		const style = window.getComputedStyle(contentEl);
 		const paddingTop = parseFloat(style.paddingTop);
 		const paddingBottom = parseFloat(style.paddingBottom);
-
 		const totalHeight = childrenHeight + paddingTop + paddingBottom;
 
 		cardHeight = `${totalHeight}px`;
@@ -157,14 +155,13 @@
 
 	$effect(() => {
 		updateCardHeight();
-
-		window?.addEventListener('resize', () => {
-			updateCardHeight();
-		});
+		window?.addEventListener('resize', updateCardHeight);
 	});
+
+	// $inspect({ $delayed, $timeout });
 </script>
 
-<div class="flex min-h-screen items-center justify-center">
+<div class="flex min-h-screen w-full items-center justify-center">
 	<div class="flex h-auto w-full items-center justify-center scroll-auto">
 		<Card.Root
 			class={`cart-content w-full max-w-sm overflow-hidden rounded-lg bg-white p-0 shadow-md transition-[height] duration-1000 ease-in-out md:max-w-md md:p-8 dark:border-gray-400 dark:bg-gray-700`}
@@ -215,15 +212,16 @@
 			</Card.Content>
 
 			<Card.Footer class="flex flex-col gap-6 text-center">
-				<p class="text-gray-600 dark:text-white">or</p>
-				<h2 class="text-2xl font-semibold">E-mail</h2>
+				<!-- <p class="text-gray-600 dark:text-white">or</p> -->
+				<Separator />
+				<h2 class="text-xl font-semibold">E-mail</h2>
 
 				<Tabs.Root class="w-full" bind:value={activeTab}>
 					<Tabs.List>
 						<Tabs.Trigger value="register">Register</Tabs.Trigger>
 						<Tabs.Trigger value="login">Login</Tabs.Trigger>
 					</Tabs.List>
-					<Tabs.Content value="register" class="transition-[height] duration-8000 ease-in-out">
+					<Tabs.Content value="register" class="ease-out-expo transition-[height] duration-[8000]">
 						{#if activeTab === 'register'}
 							<div transition:fade={{ duration: 800 }}>
 								<form
@@ -282,7 +280,12 @@
 										<Form.FieldErrors />
 									</Form.Field>
 									<!-- Create Account Button -->
-									<Form.Button class="mt-2 w-full">Create account</Form.Button>
+									<Form.Button class="mt-2 flex w-full gap-4">
+										Create account
+										{#if $registerDelayed}
+											<Spinner />
+										{/if}
+									</Form.Button>
 								</form>
 								{#if $registerMessage}
 									<Alert.Root class="">
@@ -296,7 +299,7 @@
 							</div>
 						{/if}
 					</Tabs.Content>
-					<Tabs.Content value="login">
+					<Tabs.Content value="login" class="ease-out-expo transition-[height] duration-[600ms]">
 						{#if activeTab === 'login'}
 							<div transition:fade={{ duration: 800 }}>
 								<form
@@ -331,7 +334,12 @@
 										<Form.FieldErrors />
 									</Form.Field>
 									<!-- Create Account Button -->
-									<Form.Button class="mt-2 w-full">Log In</Form.Button>
+									<Form.Button class="mt-2 flex w-full gap-4">
+										Log In
+										{#if $loginDelayed}
+											<Spinner />
+										{/if}
+									</Form.Button>
 								</form>
 								{#if $loginMessage}
 									<Alert.Root class="mt-4 flex-col items-center justify-center">
@@ -343,6 +351,10 @@
 									</Alert.Root>
 								{/if}
 							</div>
+						{/if}
+
+						{#if $timeout}
+							<p class="error">Something is taking too long. Please try again.</p>
 						{/if}
 					</Tabs.Content>
 				</Tabs.Root>

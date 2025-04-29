@@ -45,6 +45,13 @@
 	--radius-sm: calc(var(--radius) - 4px);
 }
 
+@layer base {
+	button,
+	[role='button'] {
+		cursor: pointer;
+	}
+}
+
 html {
 	interpolate-size: allow-keywords;
 }
@@ -53,4 +60,15 @@ body {
 	font-family: 'Geist', Avenir, Helvetica, Arial, sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	border: 0;
 }
