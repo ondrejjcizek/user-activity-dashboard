@@ -2,9 +2,9 @@
 
 // export async function load({ data }) {
 // 	console.log(data);
-// 	// const session = await auth.api.getSession({
-// 	// 	headers: event.request.headers
-// 	// });
+// 	const session = await auth.api.getSession({
+// 		headers: event.request.headers
+// 	});
 
 // 	return {
 // 		data

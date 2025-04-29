@@ -40,7 +40,11 @@ export const RegisterUserZodSchema = z.object({
 		.string()
 		.min(MIN_NAME_LENGTH, NAME_MIN_ERROR_MESSAGE)
 		.max(MAX_NAME_LENGTH, NAME_MAX_ERROR_MESSAGE),
-	email: emailZodSchema
+	email: emailZodSchema,
+	password: z
+		.string()
+		.min(MIN_PASSWORD_LENGTH, PASSWORD_MIN_ERROR_MESSAGE)
+		.max(MAX_PASSWORD_LENGTH, PASSWORD_MAX_ERROR_MESSAGE)
 });
 
 export const UserLoginZodSchema = z.object({

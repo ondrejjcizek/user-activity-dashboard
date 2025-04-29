@@ -1,3 +1,5 @@
+// npx tsx src/lib/server/db/seed.ts
+
 import { faker } from '@faker-js/faker';
 import { db } from './seedClient';
 import { user, loginHistory } from './schema';

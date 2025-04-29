@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+import { auth } from '$lib/auth';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { loginHistory } from '$lib/server/db/schema';

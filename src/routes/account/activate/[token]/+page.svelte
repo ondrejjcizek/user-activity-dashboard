@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { authClient } from '@/auth-client';
+	import { authClient } from '$lib/auth-client';
 	import { toast } from 'svelte-sonner';
 	import type { PageServerData } from './$types';
 
@@ -9,54 +9,38 @@
 
 	let redirecting = $state(false);
 
-	$inspect({ data, redirecting });
+	// $inspect({ data, redirecting });
 
 	$effect(() => {
-		async () => {
+		const run = async () => {
 			console.log('🚀 Effect triggered', data);
 
-			// 1. Activation just happened
 			if (data?.success && data?.role === 'user') {
-				console.log('✅ Activation success - refreshing session...');
+				console.log('✅ Activation success!');
 				redirecting = true;
-				toast.success('Account activated successfully! 🎉');
+				toast.success('Account activated successfully!');
 
-				await authClient.getSession({ query: { disableCookieCache: true } });
+				// maybe optionally refresh session, but do not block
+				authClient.getSession({ query: { disableCookieCache: true } }).catch(console.error);
+				// await invalidateAll();
 
-				setTimeout(() => {
-					goto('/account');
-				}, 1500);
+				goto('/account');
 				return;
 			}
 
-			// 2. Already verified
 			if (data?.alreadyVerified) {
-				console.log('🔵 Already verified - refreshing session...');
+				console.log('🔵 Already verified!');
 				redirecting = true;
-				toast.info('Account was already verified! 📋');
+				toast.info('Account was already verified!');
 
-				await authClient.getSession({ query: { disableCookieCache: true } });
+				authClient.getSession({ query: { disableCookieCache: true } }).catch(console.error);
+				// await invalidateAll();
 
-				setTimeout(() => {
-					goto('/account');
-				}, 1500);
+				goto('/account');
 				return;
 			}
 
-			// 3. Existing session
-			const { data: currentSession } = await authClient.getSession();
-			if (currentSession) {
-				console.log('✅ Session active - redirecting immediately...');
-				redirecting = true;
-				toast.success('Activated and logged in! ✅');
-
-				setTimeout(() => {
-					goto('/account');
-				}, 1500);
-				return;
-			}
-
-			// 4. Error fallback
+			// If here, show error
 			if (data?.error) {
 				console.log('❌ Activation error:', data.error);
 				toast.error(`Activation failed: ${data.error}`);
@@ -64,6 +48,7 @@
 
 			console.log('🛑 No valid session or activation yet.');
 		};
+		run();
 	});
 </script>
 

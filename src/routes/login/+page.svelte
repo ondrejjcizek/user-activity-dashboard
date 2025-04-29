@@ -1,16 +1,72 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
-	import { RegisterUserZodSchema } from '$lib/validations/AuthZodSchemas.js';
+	import { RegisterUserZodSchema, UserLoginZodSchema } from '$lib/validations/AuthZodSchemas.js';
+	import * as Form from '$lib/components/ui/form';
+	import { Input } from '$lib/components/ui/input';
 	import { superForm } from 'sveltekit-superforms';
-	import { zod } from 'sveltekit-superforms/adapters';
-	import type { PageServerData } from './$types.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import type { PageServerData } from './$types';
+	import { Button } from '$lib/components/ui/button';
+	import * as Tabs from '$lib/components/ui/tabs';
+	import { Mail, Send } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
+	import * as Alert from '$lib/components/ui/alert';
+	import { fade, fly, slide } from 'svelte/transition';
 
 	type Props = {
 		data: PageServerData;
+		getValue: () => string;
+		setValue: (newValue: string) => void;
 	};
 
-	const { data }: Props = $props();
+	const { data, getValue = $bindable(), setValue = $bindable() }: Props = $props();
+
+	const loginForm = superForm(data.loginForm, {
+		resetForm: true,
+		taintedMessage: null,
+		validators: zodClient(UserLoginZodSchema),
+		onSubmit: async ({ formData }) => {
+			try {
+				const email = formData.get('email')?.toString() ?? '';
+				const password = formData.get('password')?.toString() ?? '';
+
+				await signInEmail(email, password);
+			} catch (err) {
+				console.error('🔥 Login error:', err);
+				toast.error('Login error');
+			}
+		}
+	});
+
+	const { form: loginUserForm, message: loginMessage, enhance: loginUserEnhance } = loginForm;
+
+	const registerForm = superForm(data.registerForm, {
+		resetForm: true,
+		taintedMessage: null,
+		validators: zodClient(RegisterUserZodSchema),
+		onSubmit: async ({ formData }) => {
+			console.log(formData);
+			try {
+				const firstName = formData.get('firstName')?.toString() ?? '';
+				const lastName = formData.get('lastName')?.toString() ?? '';
+				const email = formData.get('email')?.toString() ?? '';
+				const password = formData.get('password')?.toString() ?? '';
+
+				await signUpEmail(firstName, lastName, email, password);
+			} catch (err) {
+				console.error('🔥 Login error:', err);
+				toast.error('Login error');
+			}
+		}
+	});
+
+	const {
+		form: registerUserForm,
+		message: registerMessage,
+		enhance: registerUserEnhance
+	} = registerForm;
 
 	const signInGithub = async () => {
 		await authClient.signIn.social({
@@ -28,12 +84,17 @@
 		});
 	};
 
-	const signUpEmail = async () => {
+	const signUpEmail = async (
+		firstName: string,
+		lastName: string,
+		email: string,
+		password: string
+	) => {
 		await authClient.signUp.email(
 			{
-				email: 'ondrejj.cizek@icloud.com',
-				password: 'password1234',
-				name: 'ondrejjcizek',
+				email,
+				password,
+				name: `${firstName} ${lastName}`,
 				callbackURL: '/account'
 			},
 			{
@@ -44,11 +105,11 @@
 		);
 	};
 
-	const signInEmail = async () => {
+	const signInEmail = async (email: string, password: string) => {
 		await authClient.signIn.email(
 			{
-				email: 'ondrejj.cizek@icloud.com',
-				password: 'password1234',
+				email,
+				password,
 				callbackURL: '/account'
 			},
 			{
@@ -72,243 +133,209 @@
 		invalidateAll();
 	};
 
-	const {
-		enhance: registerUserEnhance,
-		form: registerUserForm,
-		errors: registerUserErrors,
-		message: registerMessage
-	} = superForm(data.form, {
-		resetForm: true,
-		taintedMessage: null,
-		validators: zod(RegisterUserZodSchema),
-		onSubmit: async ({ formData }) => {
-			setTimeout(() => {
-				$registerMessage = '';
-			}, 2000);
-		}
-	});
+	let open = $state(false);
 
-	const session = authClient.useSession;
+	let activeTab = $state('login');
 
-	$effect(() => {
-		const session = authClient.useSession;
-	});
+	$inspect({ activeTab });
+
+	// function getValue() {
+	// 	return myValue;
+	// }
+
+	// function setValue(newValue: string) {
+	// 	myValue = newValue;
+	// }
 </script>
 
+<button onclick={() => (open = !open)} class="mb-4"> Toggle </button>
+
 <div class="flex min-h-screen items-center justify-center bg-gray-50">
-	<div class="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
-		{#if data.session}
-			<div class="text-center">
-				<h2 class="mb-4 text-2xl font-semibold text-gray-800">Welcome</h2>
-				<div class="flex items-center justify-center gap-4">
-					<img
-						src={data.session?.user.image}
-						alt={data.session?.user.name}
-						class={`h-12 w-12 rounded-full ${data.session?.user.image ? '' : 'hidden'}`}
-					/>
-					<p class="text-lg text-gray-600">{data.session?.user.name}</p>
-				</div>
+	<Card.Root
+		class={`w-full max-w-md overflow-hidden rounded-lg bg-white p-8 shadow-md transition-[height] duration-1000 ease-in-out dark:bg-black ${
+			activeTab === 'register' ? 'h-[803px]' : 'h-[651px]'
+		}`}
+	>
+		<!-- {#if data.session}
+			<Card.Header class="text-center">
+				<Card.Title class="text-2xl font-semibold text-gray-800">Welcome</Card.Title>
+				<Card.Description>
+					<div class="flex items-center justify-center gap-4">
+						<img
+							src={data.session?.user.image}
+							alt={data.session?.user.name}
+							class={`h-12 w-12 rounded-full ${data.session?.user.image ? '' : 'hidden'}`}
+						/>
+						<p class="text-lg text-gray-600">{data.session?.user.name}</p>
+					</div>
+				</Card.Description>
+			</Card.Header>
+
+			<Card.Footer class="flex justify-center">
 				<button
 					onclick={signOut}
 					class="mt-6 rounded-md bg-red-500 px-6 py-3 text-sm font-medium text-white transition hover:bg-red-600 focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:outline-none"
 				>
 					Sign out
 				</button>
-			</div>
-		{:else}
-			<div class="flex flex-col gap-3 text-center">
-				<h2 class="text-2xl font-semibold text-gray-800">Authentication</h2>
-				<p class="mb-6 text-gray-600">Please sign in to continue</p>
-				<div class="flex gap-3">
-					<button
-						onclick={signInGithub}
-						class="inline-flex w-full items-center justify-center rounded-md bg-black px-6 py-3 text-sm font-medium text-white transition hover:bg-gray-800 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:outline-none"
-					>
-						<svg
-							class="mr-2"
-							width="24px"
-							height="24px"
-							viewBox="0 0 20 20"
-							version="1.1"
-							xmlns="http://www.w3.org/2000/svg"
-							xmlns:xlink="http://www.w3.org/1999/xlink"
-							fill="#ffffff"
-							stroke="#ffffff"
-							><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g
-								id="SVGRepo_tracerCarrier"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							></g><g id="SVGRepo_iconCarrier">
-								<title>github [#ffffff]</title> <desc>Created with Sketch.</desc> <defs> </defs>
-								<g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-									<g
-										id="Dribbble-Light-Preview"
-										transform="translate(-140.000000, -7559.000000)"
-										fill="#ffffff"
-									>
-										<g id="icons" transform="translate(56.000000, 160.000000)">
-											<path
-												d="M94,7399 C99.523,7399 104,7403.59 104,7409.253 C104,7413.782 101.138,7417.624 97.167,7418.981 C96.66,7419.082 96.48,7418.762 96.48,7418.489 C96.48,7418.151 96.492,7417.047 96.492,7415.675 C96.492,7414.719 96.172,7414.095 95.813,7413.777 C98.04,7413.523 100.38,7412.656 100.38,7408.718 C100.38,7407.598 99.992,7406.684 99.35,7405.966 C99.454,7405.707 99.797,7404.664 99.252,7403.252 C99.252,7403.252 98.414,7402.977 96.505,7404.303 C95.706,7404.076 94.85,7403.962 94,7403.958 C93.15,7403.962 92.295,7404.076 91.497,7404.303 C89.586,7402.977 88.746,7403.252 88.746,7403.252 C88.203,7404.664 88.546,7405.707 88.649,7405.966 C88.01,7406.684 87.619,7407.598 87.619,7408.718 C87.619,7412.646 89.954,7413.526 92.175,7413.785 C91.889,7414.041 91.63,7414.493 91.54,7415.156 C90.97,7415.418 89.522,7415.871 88.63,7414.304 C88.63,7414.304 88.101,7413.319 87.097,7413.247 C87.097,7413.247 86.122,7413.234 87.029,7413.87 C87.029,7413.87 87.684,7414.185 88.139,7415.37 C88.139,7415.37 88.726,7417.2 91.508,7416.58 C91.513,7417.437 91.522,7418.245 91.522,7418.489 C91.522,7418.76 91.338,7419.077 90.839,7418.982 C86.865,7417.627 84,7413.783 84,7409.253 C84,7403.59 88.478,7399 94,7399"
-												id="github-[#ffffff]"
-											>
-											</path>
-										</g>
-									</g>
-								</g>
-							</g></svg
-						>
-						Sign in with GitHub
-					</button>
-				</div>
-				<div class="flex">
-					<button
-						onclick={signInGoogle}
-						class="inline-flex w-full items-center justify-center rounded-md bg-black px-6 py-3 text-sm font-medium text-white transition hover:bg-gray-800 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:outline-none"
-					>
-						<svg
-							class="mr-2"
-							fill="#ffffff"
-							width="24px"
-							height="24px"
-							viewBox="0 0 512 512"
-							xmlns="http://www.w3.org/2000/svg"
-							stroke="#ffffff"
-							><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g
-								id="SVGRepo_tracerCarrier"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							></g><g id="SVGRepo_iconCarrier"
-								><title>ionicons-v5_logos</title><path
-									d="M473.16,221.48l-2.26-9.59H262.46v88.22H387c-12.93,61.4-72.93,93.72-121.94,93.72-35.66,0-73.25-15-98.13-39.11a140.08,140.08,0,0,1-41.8-98.88c0-37.16,16.7-74.33,41-98.78s61-38.13,97.49-38.13c41.79,0,71.74,22.19,82.94,32.31l62.69-62.36C390.86,72.72,340.34,32,261.6,32h0c-60.75,0-119,23.27-161.58,65.71C58,139.5,36.25,199.93,36.25,256S56.83,369.48,97.55,411.6C141.06,456.52,202.68,480,266.13,480c57.73,0,112.45-22.62,151.45-63.66,38.34-40.4,58.17-96.3,58.17-154.9C475.75,236.77,473.27,222.12,473.16,221.48Z"
-								></path></g
-							></svg
-						>
-						Sign in with Google
-					</button>
-				</div>
-				<div class="flex">
-					<button
-						onclick={signUpEmail}
-						class="inline-flex w-full items-center justify-center rounded-md bg-black px-6 py-3 text-sm font-medium text-white transition hover:bg-gray-800 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:outline-none"
-					>
-						<svg
-							class="mr-2"
-							fill="#ffffff"
-							width="24px"
-							height="24px"
-							viewBox="0 0 512 512"
-							xmlns="http://www.w3.org/2000/svg"
-							stroke="#ffffff"
-							><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g
-								id="SVGRepo_tracerCarrier"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							></g><g id="SVGRepo_iconCarrier"
-								><title>ionicons-v5_logos</title><path
-									d="M473.16,221.48l-2.26-9.59H262.46v88.22H387c-12.93,61.4-72.93,93.72-121.94,93.72-35.66,0-73.25-15-98.13-39.11a140.08,140.08,0,0,1-41.8-98.88c0-37.16,16.7-74.33,41-98.78s61-38.13,97.49-38.13c41.79,0,71.74,22.19,82.94,32.31l62.69-62.36C390.86,72.72,340.34,32,261.6,32h0c-60.75,0-119,23.27-161.58,65.71C58,139.5,36.25,199.93,36.25,256S56.83,369.48,97.55,411.6C141.06,456.52,202.68,480,266.13,480c57.73,0,112.45-22.62,151.45-63.66,38.34-40.4,58.17-96.3,58.17-154.9C475.75,236.77,473.27,222.12,473.16,221.48Z"
-								></path></g
-							></svg
-						>
-						Sign Up with Email
-					</button>
-				</div>
-				<div class="flex">
-					<button
-						onclick={signInEmail}
-						class="inline-flex w-full items-center justify-center rounded-md bg-black px-6 py-3 text-sm font-medium text-white transition hover:bg-gray-800 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:outline-none"
-					>
-						<svg
-							class="mr-2"
-							fill="#ffffff"
-							width="24px"
-							height="24px"
-							viewBox="0 0 512 512"
-							xmlns="http://www.w3.org/2000/svg"
-							stroke="#ffffff"
-							><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g
-								id="SVGRepo_tracerCarrier"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							></g><g id="SVGRepo_iconCarrier"
-								><title>ionicons-v5_logos</title><path
-									d="M473.16,221.48l-2.26-9.59H262.46v88.22H387c-12.93,61.4-72.93,93.72-121.94,93.72-35.66,0-73.25-15-98.13-39.11a140.08,140.08,0,0,1-41.8-98.88c0-37.16,16.7-74.33,41-98.78s61-38.13,97.49-38.13c41.79,0,71.74,22.19,82.94,32.31l62.69-62.36C390.86,72.72,340.34,32,261.6,32h0c-60.75,0-119,23.27-161.58,65.71C58,139.5,36.25,199.93,36.25,256S56.83,369.48,97.55,411.6C141.06,456.52,202.68,480,266.13,480c57.73,0,112.45-22.62,151.45-63.66,38.34-40.4,58.17-96.3,58.17-154.9C475.75,236.77,473.27,222.12,473.16,221.48Z"
-								></path></g
-							></svg
-						>
-						Sign In with Email
-					</button>
-				</div>
-			</div>
+			</Card.Footer>
+		{:else} -->
+		<Card.Header class="text-center">
+			<Card.Title class="text-3xl font-bold">Authentication</Card.Title>
+			<Card.Description>Please sign in to continue</Card.Description>
+		</Card.Header>
 
-			<!-- <div class="flex flex-col gap-3 text-center">
-				<p class="mb-6 text-gray-600">or</p>
-				<h2 class="text-2xl font-semibold text-gray-800">E-mail</h2>
-				<form
-					method="POST"
-					action="?/registerUserZodSchema"
-					use:registerUserEnhance
-					class="mx-auto w-full max-w-sm text-black"
-				>
-					<div class="mb-5">
-						<label for="name" class="mb-2 block text-sm font-medium text-gray-900 dark:text-black"
-							>Username</label
-						>
-						<input
-							type="name"
-							id="name"
-							bind:value={$registerUserForm.name}
-							autocomplete="one-time-code"
-							class="peer w-full rounded-md border border-gray-300 bg-white p-2 invalid:border-red-500 invalid:ring-red-300 focus:border-blue-500 focus:ring focus:ring-blue-300"
-							placeholder="Joshuamood"
-							required
-						/>
-						{#if $registerUserErrors.name}<p class="hidden text-sm text-red-600 peer-invalid:block">
-								{$registerUserErrors.name}
-							</p>{/if}
-					</div>
-					<div class="mb-5">
-						<label for="email" class="mb-2 block text-sm font-medium text-gray-900 dark:text-black"
-							>Your email</label
-						>
-						<input
-							type="email"
-							id="email"
-							bind:value={$registerUserForm.email}
-							autocomplete="one-time-code"
-							class="peer w-full rounded-md border border-gray-300 bg-white p-2 invalid:border-red-500 invalid:ring-red-300 focus:border-blue-500 focus:ring focus:ring-blue-300"
-							placeholder="joshua@mood.com"
-							required
-						/>
-						{#if $registerUserErrors.email}<p
-								class="hidden text-sm text-red-600 peer-invalid:block"
+		<Card.Content class="flex flex-col gap-3">
+			<!-- Google Sign In -->
+			<Button variant="outline" onclick={signInGoogle} class="flex gap-2">
+				<img src="/google-mark.svg" alt="" />
+				Sign in with Google
+			</Button>
+
+			<!-- GitHub Sign In -->
+			<Button variant="outline" onclick={signInGithub} class="flex gap-2">
+				<img class="flex dark:hidden" src="/github-mark.svg" alt="" />
+				<img class="hidden dark:flex" src="/github-mark-white.svg" alt="" />
+				Sign in with GitHub
+			</Button>
+		</Card.Content>
+
+		<Card.Footer class="flex flex-col gap-6 text-center">
+			<p class="text-gray-600">or</p>
+			<h2 class="text-2xl font-semibold">E-mail</h2>
+
+			<Tabs.Root class="w-full" bind:value={activeTab}>
+				<Tabs.List>
+					<Tabs.Trigger value="register">Register</Tabs.Trigger>
+					<Tabs.Trigger value="login">Login</Tabs.Trigger>
+				</Tabs.List>
+				<Tabs.Content value="register" class="transition-[height] duration-1000 ease-in-out">
+					{#key activeTab}
+						<div transition:fly={{ x: -800, duration: 1000 }} class="relative">
+							<form
+								class="absolute top-0 w-full space-y-4 text-left"
+								method="POST"
+								use:registerUserEnhance
+								onsubmit={registerForm.submit}
 							>
-								{$registerUserErrors.email}
-							</p>{/if}
-					</div>
-					<div class="mb-5">
-						<label
-							for="password"
-							class="mb-2 block text-sm font-medium text-gray-900 dark:text-black"
-							>Your password</label
-						>
-						<input
-							type="password"
-							id="password"
-							placeholder="password..."
-							bind:value={$registerUserForm.password}
-							autocomplete="one-time-code"
-							class="peer w-full rounded-md border border-gray-300 bg-white p-2 invalid:border-red-500 invalid:ring-red-300 focus:border-blue-500 focus:ring focus:ring-blue-300"
-							required
-						/>
-						{#if $registerUserErrors.password}<p
-								class="hidden text-sm text-red-600 peer-invalid:block"
+								<!-- First Name -->
+								<Form.Field form={registerForm} name="firstName">
+									<Form.Control let:attrs>
+										<Form.Label>First Name</Form.Label>
+										<Input
+											{...attrs}
+											bind:value={$registerUserForm.firstName}
+											placeholder="First Name"
+										/>
+									</Form.Control>
+									<Form.FieldErrors />
+								</Form.Field>
+								<!-- Last Name -->
+								<Form.Field form={registerForm} name="lastName">
+									<Form.Control let:attrs>
+										<Form.Label>Last Name</Form.Label>
+										<Input
+											{...attrs}
+											bind:value={$registerUserForm.lastName}
+											placeholder="Last Name"
+										/>
+									</Form.Control>
+									<Form.FieldErrors />
+								</Form.Field>
+								<!-- Email -->
+								<Form.Field form={registerForm} name="email">
+									<Form.Control let:attrs>
+										<Form.Label>Email</Form.Label>
+										<Input
+											{...attrs}
+											bind:value={$registerUserForm.email}
+											placeholder="you@example.com"
+										/>
+									</Form.Control>
+									<Form.FieldErrors />
+								</Form.Field>
+								<!-- Password -->
+								<Form.Field form={registerForm} name="password">
+									<Form.Control let:attrs>
+										<Form.Label>Password</Form.Label>
+										<Input
+											{...attrs}
+											type="password"
+											bind:value={$registerUserForm.password}
+											placeholder="••••••••"
+										/>
+									</Form.Control>
+									<Form.FieldErrors />
+								</Form.Field>
+								<!-- Create Account Button -->
+								<Form.Button class="mt-2 w-full">Create account</Form.Button>
+							</form>
+							{#if $registerMessage}
+								<Alert.Root class="">
+									<Send class="h-4 w-4" />
+									<Alert.Title class="text-left">Success!</Alert.Title>
+									<Alert.Description class="text-left text-balance">
+										{$registerMessage.alertText}
+									</Alert.Description>
+								</Alert.Root>
+							{/if}
+						</div>
+					{/key}
+				</Tabs.Content>
+				<Tabs.Content value="login">
+					{#key activeTab}
+						<div transition:fly={{ x: 800, duration: 1000 }} class="relative">
+							<form
+								class="absolute top-0 w-full space-y-4 text-left"
+								method="POST"
+								use:loginUserEnhance
+								onsubmit={loginForm.submit}
 							>
-								{$registerUserErrors.password}
-							</p>{/if}
-					</div>
-					<button onclick={signUpEmail} type="submit" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
-				</form>
-			</div> -->
-		{/if}
-	</div>
+								<!-- Email -->
+								<Form.Field form={loginForm} name="email">
+									<Form.Control let:attrs>
+										<Form.Label>Email</Form.Label>
+										<Input
+											{...attrs}
+											bind:value={$loginUserForm.email}
+											placeholder="you@example.com"
+										/>
+									</Form.Control>
+									<Form.FieldErrors />
+								</Form.Field>
+								<!-- Password -->
+								<Form.Field form={loginForm} name="password">
+									<Form.Control let:attrs>
+										<Form.Label>Password</Form.Label>
+										<Input
+											{...attrs}
+											type="password"
+											bind:value={$loginUserForm.password}
+											placeholder="••••••••"
+										/>
+									</Form.Control>
+									<Form.FieldErrors />
+								</Form.Field>
+								<!-- Create Account Button -->
+								<Form.Button class="mt-2 w-full">Log In</Form.Button>
+							</form>
+							{#if $loginMessage}
+								<Alert.Root class="mt-4 flex-col items-center justify-center">
+									<Send class="h-4 w-4" />
+									<Alert.Title class="text-left">Success!</Alert.Title>
+									<Alert.Description class="text-left text-balance">
+										{$loginMessage.alertText}
+									</Alert.Description>
+								</Alert.Root>
+							{/if}
+						</div>
+					{/key}
+				</Tabs.Content>
+			</Tabs.Root>
+		</Card.Footer>
+		<!-- {/if} -->
+	</Card.Root>
 </div>
+
+<style>
+</style>

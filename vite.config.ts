@@ -3,12 +3,19 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import mkcert from 'vite-plugin-mkcert';
 import unfonts from 'unplugin-fonts/vite';
+import { svelteInspector } from '@sveltejs/vite-plugin-svelte-inspector';
 
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
 		sveltekit(),
 		mkcert(),
+		svelteInspector({
+			toggleKeyCombo: 'control-shift',
+			holdMode: true,
+			showToggleButton: 'active',
+			toggleButtonPos: 'top-right'
+		}),
 		unfonts({
 			custom: {
 				display: 'swap',

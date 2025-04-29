@@ -4,9 +4,11 @@ import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import { loginHistory, user as userTable } from '$lib/server/db/schema';
-import { SignJWT, jwtVerify, decodeJwt } from 'jose';
+import { jwtVerify, decodeJwt } from 'jose';
 import { Resend } from 'resend';
 import { RESEND_API_KEY } from '$env/static/private';
+import { BETTER_AUTH_URL } from '$env/static/private';
+// import { customSession } from 'better-auth/plugins';
 
 import { eq, type InferInsertModel } from 'drizzle-orm';
 import {
@@ -24,22 +26,22 @@ import { randomUUID } from 'crypto';
 
 const secret = new TextEncoder().encode(AUTH_SECRET);
 
-async function generateToken(payload: TokenPayload): Promise<string> {
-	return await new SignJWT(payload)
-		.setProtectedHeader({ alg: 'HS256' })
-		.setExpirationTime('1h')
-		.sign(secret);
-}
+// async function generateToken(payload: TokenPayload): Promise<string> {
+// 	return await new SignJWT(payload)
+// 		.setProtectedHeader({ alg: 'HS256' })
+// 		.setExpirationTime('1h')
+// 		.sign(secret);
+// }
 
 type TokenPayload = {
 	id: string;
 	email: string;
 };
 
-type SendEmailProps = {
-	email: string;
-	activationUrl: string;
-};
+// type SendEmailProps = {
+// 	email: string;
+// 	activationUrl: string;
+// };
 
 type NewLogin = InferInsertModel<typeof loginHistory>;
 
@@ -79,28 +81,28 @@ export async function verifyToken(token: string): Promise<TokenPayload> {
 
 const resend = new Resend(RESEND_API_KEY);
 
-const sendEmail = async ({ email, activationUrl }: SendEmailProps) => {
-	const { error } = await resend.emails.send({
-		from: 'Crispy Broccoli <onboarding@resend.dev>',
-		to: 'ondrejj.cizek@icloud.com',
-		subject: 'Aktivuj svůj účet',
-		html: `<p>Klikni pro přihlášení:</p><a href="${activationUrl}">${activationUrl}</a>`
-		// from: 'Crispy Broccoli <onboarding@resend.dev>',
-		// to: [email],
-		// subject: 'Aktivuj svůj účet',
-		// html: `<p>Klikni pro přihlášení:</p><a href="${activationUrl}">${activationUrl}</a>`
-	});
+// const sendEmail = async ({ email, activationUrl }: SendEmailProps) => {
+// 	const { error } = await resend.emails.send({
+// 		from: 'Crispy Broccoli <onboarding@resend.dev>',
+// 		to: 'ondrejj.cizek@icloud.com',
+// 		subject: 'Aktivuj svůj účet',
+// 		html: `<p>Klikni pro přihlášení:</p><a href="${activationUrl}">${activationUrl}</a>`
+// 		// from: 'Crispy Broccoli <onboarding@resend.dev>',
+// 		// to: [email],
+// 		// subject: 'Aktivuj svůj účet',
+// 		// html: `<p>Klikni pro přihlášení:</p><a href="${activationUrl}">${activationUrl}</a>`
+// 	});
 
-	if (error) {
-		console.error({ error });
-		return { success: false, message: `Failed to send email: ${error.message}` };
-	}
+// 	if (error) {
+// 		console.error({ error });
+// 		return { success: false, message: `Failed to send email: ${error.message}` };
+// 	}
 
-	return {
-		success: true,
-		message: `An email has been sent to ${email} with the subject Aktivuj svůj účet.`
-	};
-};
+// 	return {
+// 		success: true,
+// 		message: `An email has been sent to ${email} with the subject Aktivuj svůj účet.`
+// 	};
+// };
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: 'sqlite' }),
@@ -116,7 +118,7 @@ export const auth = betterAuth({
 			const [dbUser] = await db.select().from(userTable).where(eq(userTable.email, email));
 			if (!dbUser) return;
 
-			// ✅ 7. Generate fake login history if missing
+			// ✅ 0. Generate fake login history if missing
 			const [loginEntry] = await db.query.loginHistory.findMany({
 				where: (lh, { eq }) => eq(lh.userId, dbUser.id),
 				limit: 1
@@ -144,30 +146,30 @@ export const auth = betterAuth({
 				}
 			}
 
-			// ✅ 1. Check if user is activated
-			if (!dbUser.emailVerified) {
-				console.warn(`⛔ Account not activated: ${email}`);
+			// // ✅ 1. Check if user is activated
+			// if (!dbUser.emailVerified) {
+			// 	console.warn(`⛔ Account not activated: ${email}`);
 
-				// ✅ 2. Generate activation token
-				const token = await generateToken({ id: dbUser.id, email: dbUser.email });
+			// 	// ✅ 2. Generate activation token
+			// 	const token = await generateToken({ id: dbUser.id, email: dbUser.email });
 
-				// ✅ 3. Prepare activation URL
-				const activationUrl = `https://localhost:5173/account/activate/${token}`;
+			// 	// ✅ 3. Prepare activation URL
+			// 	const activationUrl = `https://localhost:5173/account/activate/${token}`;
 
-				// ✅ 4. Send activation email
-				await sendEmail({ email, activationUrl });
+			// 	// ✅ 4. Send activation email
+			// 	await sendEmail({ email, activationUrl });
 
-				// ✅ 5. Prevent login until activated
-				ctx.context.newSession = null;
-				ctx.context.response = {
-					status: 401,
-					body: {
-						error: 'Account not activated. Activation email sent.'
-					}
-				};
+			// 	// ✅ 5. Prevent login until activated
+			// 	ctx.context.newSession = null;
+			// 	ctx.context.response = {
+			// 		status: 401,
+			// 		body: {
+			// 			error: 'Account not activated. Activation email sent.'
+			// 		}
+			// 	};
 
-				return;
-			}
+			// 	return;
+			// }
 
 			// ✅ 6. Mark as online + update last active
 			await db
@@ -181,10 +183,43 @@ export const auth = betterAuth({
 		})
 	},
 
-	// Zbytek nastavení
 	appName: 'procorp-frontend-test',
-	emailAndPassword: { enabled: true },
-	emailVerification: { sendOnSignUp: true },
+	session: {
+		expiresIn: 60 * 60 * 24 * 7, // 7 days
+		updateAge: 60 * 60 * 24 // 1 day
+	},
+	emailAndPassword: {
+		enabled: true,
+		requireEmailVerification: true
+	},
+	emailVerification: {
+		autoSignInAfterVerification: true,
+		sendVerificationEmail: async ({ user, url, token }) => {
+			console.log('📨 sendVerificationEmail called with:');
+			console.log('User:', user);
+			console.log('Verification URL:', url);
+			console.log('Token:', token);
+
+			// const baseUrl = 'https://your-domain.com'; // <-- Change to your real production domain
+
+			const fullUrl = `${BETTER_AUTH_URL}${url}`; // Combine base + relative URL
+
+			const { data, error } = await resend.emails.send({
+				from: 'User Activity Dashboard <onboarding@resend.dev>',
+				to: 'ondrejj.cizek@icloud.com', // <-- Dynamic, not hardcoded anymore
+				// from: 'User Activity Dashboard <onboarding@resend.dev>',
+				// to: user.email, // <-- Dynamic, not hardcoded anymore
+				subject: 'Verify your email address',
+				html: `<p>Please verify your email by clicking <a href="${fullUrl}">${fullUrl}</a>.</p>`
+			});
+
+			if (error) {
+				console.error('❌ Resend email sending error:', error);
+			} else {
+				console.log('✅ Resend email sent successfully!', data);
+			}
+		}
+	},
 	account: {
 		accountLinking: {
 			enabled: true

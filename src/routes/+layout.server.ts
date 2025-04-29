@@ -3,48 +3,57 @@ import { user as userTable } from '$lib/server/db/schema';
 import { redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
+import { auth } from '$lib/auth';
 
-export const load: LayoutServerLoad = async ({ locals, url }) => {
-	const session = locals.session;
+export const load: LayoutServerLoad = async ({ request, url }) => {
+	const sessionData = await auth.api.getSession({ headers: request.headers });
 
-	// ✅ Výjimka — login, aktivace účtu, nebo první načtení /account po aktivaci
-	if (
-		url.pathname.startsWith('/login') ||
-		url.pathname.startsWith('/account/activate') ||
-		url.pathname.startsWith('/account') || // 🛠️ Added this line
-		url.pathname.startsWith('/unauthorized')
-	) {
-		return { session: session ?? null };
+	const session = sessionData?.session ?? null;
+	const userSession = sessionData?.user ?? null;
+
+	console.log('[SESSION DATA]', sessionData);
+
+	// ✅ Always allow public routes
+	const publicRoutes = ['/login', '/account/activate', '/unauthorized', '/verify-email'];
+
+	if (publicRoutes.some((route) => url.pathname.startsWith(route))) {
+		console.log('🌍 Public page, skip session check:', url.pathname);
+		return { session: sessionData ?? null };
 	}
 
-	// ❌ Pokud není přihlášený
-	if (!session) {
-		throw redirect(302, `/login?redirectTo=${url.pathname}`);
+	// ❗ Special case: if on `/verify-email` → DON'T force session check
+	if (url.pathname.startsWith('/verify-email')) {
+		console.log('🛑 Skipping session check on /verify-email');
+		return { session: sessionData ?? null };
 	}
 
-	// ✅ Načti usera
-	const [user] = await db.select().from(userTable).where(eq(userTable.id, session.userId));
+	// ❌ If no session, redirect to login
+	if (!session || !userSession) {
+		console.log('❌ No session or user, redirecting to login.');
+		throw redirect(302, `/login?redirectTo=${url.pathname}&error=unauthenticated`);
+	}
 
-	// ❌ Pokud uživatel není v DB nebo není aktivovaný
+	// ✅ Load full user
+	const [user] = await db.select().from(userTable).where(eq(userTable.id, userSession.id));
+
+	// ❌ Not verified
 	if (!user || !user.emailVerified) {
-		throw redirect(302, `/login?redirectTo=${url.pathname}`);
+		console.log('❌ User not verified.');
+		throw redirect(302, `/login?redirectTo=${url.pathname}&error=unverified`);
 	}
 
-	// 🛡️ Guard na role
-	if (url.pathname.startsWith('/admin')) {
-		if (user.role !== 'admin') {
-			console.warn('⛔ Access denied: not admin');
-			throw redirect(302, '/unauthorized');
-		}
+	// 🛡️ Admin
+	if (url.pathname.startsWith('/admin') && user.role !== 'admin') {
+		throw redirect(302, '/unauthorized?error=forbidden');
 	}
 
-	// ✨ Další guards můžeš přidat takhle:
-	// if (url.pathname.startsWith('/account/settings') && user.role === 'guest') {
-	//     throw redirect(302, '/upgrade-account');
-	// }
+	// ✅ Redirect "/" to "/account"
+	if (url.pathname === '/') {
+		throw redirect(302, '/account?success=login');
+	}
 
 	return {
-		session,
+		session: sessionData,
 		user
 	};
 };

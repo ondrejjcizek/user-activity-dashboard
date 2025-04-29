@@ -1,49 +1,197 @@
 <script lang="ts">
 	import type { PageData, PageServerData } from './$types';
-
+	import * as Table from '$lib/components/ui/table/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Avatar from '$lib/components/ui/avatar/index.js';
+	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { Separator } from '$lib/components/ui/separator/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import {
+		User,
+		Mail,
+		Calendar,
+		Clock,
+		Shield,
+		Activity,
+		Smartphone,
+		Globe,
+		MapPin,
+		AlertCircle,
+		LogOut
+	} from 'lucide-svelte';
+	import { authClient } from '$lib/auth-client';
+	import { invalidateAll } from '$app/navigation';
 	type Props = {
 		data: PageServerData;
 	};
 
+	const signOut = async () => {
+		await authClient.signOut();
+
+		invalidateAll();
+	};
+
 	const { data }: Props = $props();
+
+	const formatDate = (date: Date) => {
+		return date.toLocaleString();
+	};
+
+	const splitName = (fullName: string) => {
+		const [firstName = '', lastName = ''] = fullName.split(' ');
+
+		const initials = firstName.charAt(0) + lastName.charAt(0) || 'OČ';
+
+		return initials;
+	};
 </script>
 
-{#if !data.session}
-	<p>❌ No active session!</p>
-{:else}
-	<h2 class="mb-4">👤 Activity Summary</h2>
-	<ul>
-		<li>🧑‍💼 Name: {data.session.user.name}</li>
-		<li>📧 Email: {data.session.user.email}</li>
-		<li>🕰️ Joined: {new Date(data.activity.createdAt).toLocaleString()}</li>
-		<li>
-			🕒 Last active: {data.activity.lastActive
-				? new Date(data.activity.lastActive).toLocaleString()
-				: 'Never'}
-		</li>
-		<li>🔐 Logins (30d): {data.activity.loginsLast30Days}</li>
-		<li>⚡ Logins (3d): {data.activity.loginsLast3Days}</li>
-	</ul>
+<div class="container mx-auto px-3 py-6 md:px-6">
+	{#if !data.session}
+		<div class="bg-destructive/10 flex items-center justify-center rounded-lg p-8">
+			<AlertCircle class="text-destructive mr-2 h-5 w-5" />
+			<p class="text-destructive font-medium">No active session!</p>
+		</div>
+	{:else}
+		<div class="grid gap-6 md:grid-cols-7">
+			<!-- User Profile Card -->
+			<Card.Root class="md:col-span-3">
+				<Card.Header class="pb-4">
+					<div class="flex items-start justify-between gap-4">
+						<div class="flex gap-4">
+							<Avatar.Root class="border-primary/10 h-16 w-16 border-2">
+								<Avatar.Image
+									src={data.session.user.image || 'https://avatar.iran.liara.run/public/boy'}
+									alt={data.session.user.name || 'User'}
+								/>
+								<Avatar.Fallback class="bg-primary/10 text-primary text-lg font-bold">
+									{splitName(data.session.user.name)}
+								</Avatar.Fallback>
+							</Avatar.Root>
+							<div>
+								<Card.Title class="text-2xl">{data.session.user.name}</Card.Title>
+								<Card.Description class="mt-1 flex items-center">
+									<Mail class="text-muted-foreground mr-1.5 h-3.5 w-3.5" />
+									{data.session.user.email}
+								</Card.Description>
+							</div>
+						</div>
+						<Button
+							class="h-13 cursor-pointer"
+							onclick={signOut}
+							variant="destructive"
+							aria-label="Sign Out"><LogOut /></Button
+						>
+					</div>
+				</Card.Header>
+				<Card.Content>
+					<h3 class="mb-4 text-lg font-medium">Activity Summary</h3>
+					<div class="space-y-4">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center text-sm">
+								<Calendar class="text-muted-foreground mr-2 h-4 w-4" />
+								<span class="text-muted-foreground">Joined</span>
+							</div>
+							<span class="font-medium">{formatDate(data.activity.createdAt)}</span>
+						</div>
 
-	<h3 class="mt-6">📄 Login History</h3>
-	<table class="mt-4 w-full rounded border border-gray-300 text-sm shadow-sm">
-		<thead class="text-left">
-			<tr>
-				<th class="border p-2">📅 Date</th>
-				<th class="border p-2">🧠 Device</th>
-				<th class="border p-2">🌐 Browser</th>
-				<th class="border p-2">📍 IP</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each data.activity.history as entry}
-				<tr>
-					<td class="border p-2">{new Date(entry.date).toLocaleString()}</td>
-					<td class="border p-2">{entry.device}</td>
-					<td class="border p-2">{entry.browser}</td>
-					<td class="border p-2">{entry.ip}</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
-{/if}
+						<div class="flex items-center justify-between">
+							<div class="flex items-center text-sm">
+								<Clock class="text-muted-foreground mr-2 h-4 w-4" />
+								<span class="text-muted-foreground">Last active</span>
+							</div>
+							<span class="font-medium">
+								{data.activity.lastActive ? formatDate(data.activity.lastActive) : 'Never'}
+							</span>
+						</div>
+
+						<Separator />
+
+						<div class="flex items-center justify-between">
+							<div class="flex items-center text-sm">
+								<Shield class="text-muted-foreground mr-2 h-4 w-4" />
+								<span class="text-muted-foreground">Logins (30 days)</span>
+							</div>
+							<Badge variant="secondary">
+								{data.activity.loginsLast30Days}
+							</Badge>
+						</div>
+
+						<div class="flex items-center justify-between">
+							<div class="flex items-center text-sm">
+								<Activity class="text-muted-foreground mr-2 h-4 w-4" />
+								<span class="text-muted-foreground">Logins (3 days)</span>
+							</div>
+							<Badge variant="outline" class="bg-primary/10 text-primary border-primary/20">
+								{data.activity.loginsLast3Days}
+							</Badge>
+						</div>
+					</div>
+				</Card.Content>
+			</Card.Root>
+
+			<!-- Login History Card -->
+			<Card.Root class="md:col-span-4">
+				<Card.Header>
+					<Card.Title class="flex items-center">
+						<Shield class="mr-2 h-5 w-5" />
+						Login History
+					</Card.Title>
+					<Card.Description>Recent login activity for your account</Card.Description>
+				</Card.Header>
+				<Card.Content>
+					<div class="rounded-md border">
+						<Table.Root>
+							<Table.Header>
+								<Table.Row>
+									<Table.Head class="w-[180px]">
+										<div class="flex items-center">
+											<Calendar class="mr-2 h-4 w-4" />
+											Date
+										</div>
+									</Table.Head>
+									<Table.Head>
+										<div class="flex items-center">
+											<Smartphone class="mr-2 h-4 w-4" />
+											Device
+										</div>
+									</Table.Head>
+									<Table.Head>
+										<div class="flex items-center">
+											<Globe class="mr-2 h-4 w-4" />
+											Browser
+										</div>
+									</Table.Head>
+									<Table.Head>
+										<div class="flex items-center">
+											<MapPin class="mr-2 h-4 w-4" />
+											IP
+										</div>
+									</Table.Head>
+								</Table.Row>
+							</Table.Header>
+							<Table.Body>
+								{#each data.activity.history as entry}
+									<Table.Row>
+										<Table.Cell class="font-medium">
+											{formatDate(entry.date)}
+										</Table.Cell>
+										<Table.Cell>{entry.device}</Table.Cell>
+										<Table.Cell>{entry.browser}</Table.Cell>
+										<Table.Cell class="font-mono text-xs">{entry.ip}</Table.Cell>
+									</Table.Row>
+								{/each}
+							</Table.Body>
+						</Table.Root>
+					</div>
+				</Card.Content>
+				<Card.Footer class="flex justify-end">
+					<Button variant="outline" size="sm">
+						<Shield class="mr-2 h-4 w-4" />
+						Security Settings
+					</Button>
+				</Card.Footer>
+			</Card.Root>
+		</div>
+	{/if}
+</div>
