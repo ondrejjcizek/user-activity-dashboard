@@ -10,10 +10,10 @@
 	import type { PageServerData } from './$types';
 	import { Button } from '$lib/components/ui/button';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import { Mail, Send } from 'lucide-svelte';
+	import { Send } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import * as Alert from '$lib/components/ui/alert';
-	import { fade, fly, slide } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 
 	type Props = {
 		data: PageServerData;
@@ -127,28 +127,8 @@
 		);
 	};
 
-	const signOut = async () => {
-		await authClient.signOut();
-
-		invalidateAll();
-	};
-
-	let open = $state(false);
-
 	let activeTab = $state('login');
-
-	$inspect({ activeTab });
-
-	// function getValue() {
-	// 	return myValue;
-	// }
-
-	// function setValue(newValue: string) {
-	// 	myValue = newValue;
-	// }
 </script>
-
-<button onclick={() => (open = !open)} class="mb-4"> Toggle </button>
 
 <div class="flex min-h-screen items-center justify-center bg-gray-50">
 	<Card.Root

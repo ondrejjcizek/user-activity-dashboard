@@ -54,6 +54,6 @@
 </script>
 
 <Toaster {position} duration={3500} richColors />
-<main class="p-6 dark:bg-slate-700" transition:fade={{ duration: 600 }}>
+<main transition:fade={{ duration: 600 }}>
 	{@render children()}
 </main>
