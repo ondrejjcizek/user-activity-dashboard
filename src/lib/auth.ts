@@ -205,10 +205,10 @@ export const auth = betterAuth({
 			const fullUrl = `${BETTER_AUTH_URL}${url}`; // Combine base + relative URL
 
 			const { data, error } = await resend.emails.send({
-				from: 'User Activity Dashboard <onboarding@resend.dev>',
-				to: 'ondrejj.cizek@icloud.com', // <-- Dynamic, not hardcoded anymore
 				// from: 'User Activity Dashboard <onboarding@resend.dev>',
-				// to: user.email, // <-- Dynamic, not hardcoded anymore
+				// to: 'ondrejj.cizek@icloud.com', // <-- Dynamic, not hardcoded anymore
+				from: 'User Activity Dashboard <noreply@dashboard.ondrejcizek.cz>',
+				to: user.email, // <-- Dynamic, not hardcoded anymore
 				subject: 'Verify your email address',
 				html: `<p>Please verify your email by clicking <a href="${fullUrl}">${fullUrl}</a>.</p>`
 			});
