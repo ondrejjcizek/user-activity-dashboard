@@ -200,17 +200,11 @@ export const auth = betterAuth({
 			console.log('Verification URL:', url);
 			console.log('Token:', token);
 
-			// const baseUrl = 'https://your-domain.com'; // <-- Change to your real production domain
-
-			const fullUrl = `${BETTER_AUTH_URL}${url}`; // Combine base + relative URL
-
 			const { data, error } = await resend.emails.send({
-				// from: 'User Activity Dashboard <onboarding@resend.dev>',
-				// to: 'ondrejj.cizek@icloud.com', // <-- Dynamic, not hardcoded anymore
 				from: 'User Activity Dashboard <noreply@dashboard.ondrejcizek.cz>',
-				to: user.email, // <-- Dynamic, not hardcoded anymore
+				to: user.email,
 				subject: 'Verify your email address',
-				html: `<p>Please verify your email by clicking <a href="${fullUrl}">${fullUrl}</a>.</p>`
+				html: `<p>Please verify your email by clicking <a href="${url}">${url}</a>.</p>`
 			});
 
 			if (error) {
