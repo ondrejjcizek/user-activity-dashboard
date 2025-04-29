@@ -53,7 +53,7 @@
 			<p class="text-destructive font-medium">No active session!</p>
 		</div>
 	{:else}
-		<div class="kokot flex flex-col gap-4">
+		<div class="flex flex-col gap-12">
 			<!-- User Profile Card -->
 			<Card.Root class="mx-auto w-full max-w-md">
 				<Card.Header class="pb-4">

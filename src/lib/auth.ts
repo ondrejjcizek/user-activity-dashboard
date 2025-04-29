@@ -4,10 +4,9 @@ import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import { loginHistory, user as userTable } from '$lib/server/db/schema';
-import { jwtVerify, decodeJwt } from 'jose';
+// import { jwtVerify, decodeJwt } from 'jose';
 import { Resend } from 'resend';
 import { RESEND_API_KEY } from '$env/static/private';
-import { BETTER_AUTH_URL } from '$env/static/private';
 // import { customSession } from 'better-auth/plugins';
 
 import { eq, type InferInsertModel } from 'drizzle-orm';
@@ -15,8 +14,8 @@ import {
 	GITHUB_CLIENT_ID,
 	GITHUB_CLIENT_SECRET,
 	GOOGLE_CLIENT_ID,
-	GOOGLE_CLIENT_SECRET,
-	AUTH_SECRET
+	GOOGLE_CLIENT_SECRET
+	// BETTER_AUTH_SECRET
 } from '$env/static/private';
 import { faker } from '@faker-js/faker';
 import { randomUUID } from 'crypto';
@@ -24,7 +23,7 @@ import { randomUUID } from 'crypto';
 // import { createShopifyCustomerIfNotExists } from './server/shopifyCustomer';
 // import { createCustomerAccessToken } from './server/shopifyToken';
 
-const secret = new TextEncoder().encode(AUTH_SECRET);
+// const secret = new TextEncoder().encode(BETTER_AUTH_SECRET);
 
 // async function generateToken(payload: TokenPayload): Promise<string> {
 // 	return await new SignJWT(payload)
@@ -33,10 +32,10 @@ const secret = new TextEncoder().encode(AUTH_SECRET);
 // 		.sign(secret);
 // }
 
-type TokenPayload = {
-	id: string;
-	email: string;
-};
+// type TokenPayload = {
+// 	id: string;
+// 	email: string;
+// };
 
 // type SendEmailProps = {
 // 	email: string;
@@ -45,39 +44,39 @@ type TokenPayload = {
 
 type NewLogin = InferInsertModel<typeof loginHistory>;
 
-interface ExpiredJWTError extends Error {
-	code: 'ERR_JWT_EXPIRED';
-	cause?: { payload: unknown };
-}
+// interface ExpiredJWTError extends Error {
+// 	code: 'ERR_JWT_EXPIRED';
+// 	cause?: { payload: unknown };
+// }
 
-function isExpiredJWTError(error: unknown): error is ExpiredJWTError {
-	if (typeof error !== 'object' || error === null) {
-		return false;
-	}
+// function isExpiredJWTError(error: unknown): error is ExpiredJWTError {
+// 	if (typeof error !== 'object' || error === null) {
+// 		return false;
+// 	}
 
-	const maybeError = error as Partial<ExpiredJWTError>;
+// 	const maybeError = error as Partial<ExpiredJWTError>;
 
-	return maybeError.code === 'ERR_JWT_EXPIRED';
-}
+// 	return maybeError.code === 'ERR_JWT_EXPIRED';
+// }
 
-export async function verifyToken(token: string): Promise<TokenPayload> {
-	try {
-		const { payload } = await jwtVerify(token, secret);
-		return payload as TokenPayload;
-	} catch (err: unknown) {
-		if (isExpiredJWTError(err)) {
-			console.warn('💥 Token vypršel:', err);
+// export async function verifyToken(token: string): Promise<TokenPayload> {
+// 	try {
+// 		const { payload } = await jwtVerify(token, secret);
+// 		return payload as TokenPayload;
+// 	} catch (err: unknown) {
+// 		if (isExpiredJWTError(err)) {
+// 			console.warn('💥 Token vypršel:', err);
 
-			const payload = decodeJwt(token);
-			err.cause = { payload };
+// 			const payload = decodeJwt(token);
+// 			err.cause = { payload };
 
-			throw err;
-		}
+// 			throw err;
+// 		}
 
-		console.error('❌ Token ověření selhalo:', err);
-		throw new Error('Invalid token');
-	}
-}
+// 		console.error('❌ Token ověření selhalo:', err);
+// 		throw new Error('Invalid token');
+// 	}
+// }
 
 const resend = new Resend(RESEND_API_KEY);
 

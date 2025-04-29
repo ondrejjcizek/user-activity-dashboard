@@ -28,6 +28,8 @@
 	const loginForm = superForm(data.loginForm, {
 		resetForm: true,
 		taintedMessage: null,
+		delayMs: 100,
+		timeoutMs: 1000,
 		validators: zodClient(UserLoginZodSchema),
 		onSubmit: async ({ formData }) => {
 			const email = formData.get('email')?.toString() ?? '';
@@ -159,8 +161,6 @@
 		updateCardHeight();
 		window?.addEventListener('resize', updateCardHeight);
 	});
-
-	// $inspect({ $delayed, $timeout });
 </script>
 
 <div class="flex w-full items-center justify-center">
@@ -169,30 +169,6 @@
 			class={`card-content w-full max-w-sm overflow-hidden rounded-lg bg-white p-0 shadow-md transition-[height] duration-1000 ease-in-out md:max-w-md md:p-8 dark:border-gray-400 dark:bg-gray-700`}
 			style={activeTab === 'register' ? `height: ${cardHeight}` : `height: ${cardHeight}`}
 		>
-			<!-- {#if data.session}
-				<Card.Header class="text-center">
-					<Card.Title class="text-2xl font-semibold text-gray-800">Welcome</Card.Title>
-					<Card.Description>
-						<div class="flex items-center justify-center gap-4">
-							<img
-								src={data.session?.user.image}
-								alt={data.session?.user.name}
-								class={`h-12 w-12 rounded-full ${data.session?.user.image ? '' : 'hidden'}`}
-							/>
-							<p class="text-lg text-gray-600">{data.session?.user.name}</p>
-						</div>
-					</Card.Description>
-				</Card.Header>
-	
-				<Card.Footer class="flex justify-center">
-					<button
-						onclick={signOut}
-						class="mt-6 rounded-md bg-red-500 px-6 py-3 text-sm font-medium text-white transition hover:bg-red-600 focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:outline-none"
-					>
-						Sign out
-					</button>
-				</Card.Footer>
-			{:else} -->
 			<Card.Header class="text-center">
 				<Card.Title class="text-3xl font-bold">Authentication</Card.Title>
 				<Card.Description>Please sign in to continue</Card.Description>
@@ -338,7 +314,7 @@
 									<!-- Create Account Button -->
 									<Form.Button class="mt-2 flex w-full gap-4">
 										Log In
-										{#if $loginDelayed}
+										{#if $loginDelayed && !$loginMessage}
 											<Spinner />
 										{/if}
 									</Form.Button>
@@ -361,7 +337,6 @@
 					</Tabs.Content>
 				</Tabs.Root>
 			</Card.Footer>
-			<!-- {/if} -->
 		</Card.Root>
 	</div>
 </div>
