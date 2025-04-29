@@ -161,7 +161,7 @@
 	// $inspect({ $delayed, $timeout });
 </script>
 
-<div class="flex min-h-screen w-full items-center justify-center">
+<div class="flex w-full items-center justify-center">
 	<div class="flex h-auto w-full items-center justify-center scroll-auto">
 		<Card.Root
 			class={`cart-content w-full max-w-sm overflow-hidden rounded-lg bg-white p-0 shadow-md transition-[height] duration-1000 ease-in-out md:max-w-md md:p-8 dark:border-gray-400 dark:bg-gray-700`}
