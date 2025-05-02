@@ -16,6 +16,7 @@
 	import { Separator } from '$lib/components/ui/separator';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { PageServerData } from './$types';
+	import { tick } from 'svelte';
 
 	type Props = {
 		data: PageServerData;
@@ -33,10 +34,9 @@
 		taintedMessage: null,
 		invalidateAll: true,
 		validators: zodClient(UserLoginZodSchema),
-		onUpdate: async () => {
-			setTimeout(() => {
-				updateCardHeight();
-			}, 600);
+		onUpdated: async () => {
+			await tick();
+			updateCardHeight();
 		},
 		onResult: async ({ result }) => {
 			if (result.type === 'failure') {
@@ -72,10 +72,9 @@
 		resetForm: true,
 		taintedMessage: null,
 		validators: zodClient(RegisterUserZodSchema),
-		onUpdate: async () => {
-			setTimeout(() => {
-				updateCardHeight();
-			}, 600);
+		onUpdated: async () => {
+			await tick();
+			updateCardHeight();
 		}
 	});
 

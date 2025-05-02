@@ -101,8 +101,7 @@ export const auth = betterAuth({
 			let finalUrl: string;
 
 			try {
-				const test = new URL(url);
-				finalUrl = test.toString();
+				finalUrl = new URL(url).toString();
 			} catch {
 				finalUrl = new URL(url, BETTER_AUTH_URL).toString();
 			}
@@ -118,7 +117,7 @@ export const auth = betterAuth({
 						<p>Thank you for signing up. Please verify your email address by clicking the link below:</p>
 
 						<p>
-							<a href="${finalUrl}" style="background-color: #4CAF50; color: white; padding: 10px 16px; text-decoration: none; border-radius: 4px; display: inline-block;">
+							<a href="${finalUrl}" style="background-color: #18181b; color: white; padding: 10px 16px; text-decoration: none; border-radius: 4px; display: inline-block;">
 								Verify Account
 							</a>
 						</p>
