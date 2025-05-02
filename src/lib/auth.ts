@@ -97,16 +97,15 @@ export const auth = betterAuth({
 			console.log('User:', user);
 			console.log('Verification URL:', url);
 			console.log('Token:', token);
-			let finalUrl: URL | string = url;
 
-			if (!url.includes('localhost')) {
-				finalUrl = new URL(BETTER_AUTH_URL + url);
+			let finalUrl: string;
+
+			try {
+				const test = new URL(url);
+				finalUrl = test.toString();
+			} catch {
+				finalUrl = new URL(url, BETTER_AUTH_URL).toString();
 			}
-			// else if (!url.includes('dashboard')) {
-			// 	finalUrl = new URL(url);
-			// } else {
-			// 	console.log('URL was not found :(');
-			// }
 
 			const { data, error } = await resend.emails.send({
 				from: 'User Activity Dashboard <noreply@dashboard.ondrejcizek.cz>',
@@ -124,7 +123,7 @@ export const auth = betterAuth({
 							</a>
 						</p>
 
-						<p>If you didn’t request this email, you can safely ignore it.</p>
+						<p>If you didn't request this email, you can safely ignore it.</p>
 
 						<hr style="margin-top: 40px; border: none; border-top: 1px solid #ddd;" />
 
