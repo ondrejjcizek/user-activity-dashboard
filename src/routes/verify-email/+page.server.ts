@@ -27,7 +27,7 @@ export const load = async ({ url, request }) => {
 		return {
 			success: false,
 			error: 'Invalid or expired token',
-			callbackURL: '/'
+			callbackURL: '/account'
 		};
 	}
 };

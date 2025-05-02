@@ -14,8 +14,8 @@ import {
 	GITHUB_CLIENT_ID,
 	GITHUB_CLIENT_SECRET,
 	GOOGLE_CLIENT_ID,
-	GOOGLE_CLIENT_SECRET
-	// BETTER_AUTH_SECRET
+	GOOGLE_CLIENT_SECRET,
+	BETTER_AUTH_URL
 } from '$env/static/private';
 import { faker } from '@faker-js/faker';
 import { randomUUID } from 'crypto';
@@ -109,6 +109,21 @@ export const auth = betterAuth({
 		after: createAuthMiddleware(async (ctx) => {
 			console.log('🔥 [BetterAuth after hook] Triggered after action:', ctx.path);
 
+			if (ctx.path === '/sign-in/email') {
+				const session = ctx.context.newSession;
+
+				if (session) {
+					console.log('✅ Nová session:', session.user.email);
+
+					ctx.setCookie('welcome', 'true', {
+						path: '/',
+						maxAge: 3600
+					});
+				} else {
+					console.log('❌ kurva nic tady neni');
+				}
+			}
+
 			const newSession = ctx.context?.newSession;
 			if (!newSession || !newSession.user?.email) return;
 
@@ -185,7 +200,11 @@ export const auth = betterAuth({
 	appName: 'procorp-frontend-test',
 	session: {
 		expiresIn: 60 * 60 * 24 * 7, // 7 days
-		updateAge: 60 * 60 * 24 // 1 day
+		updateAge: 60 * 60 * 24, // 1 day
+		cookieCache: {
+			enabled: true,
+			maxAge: 60 * 5 // 5 min cache
+		}
 	},
 	emailAndPassword: {
 		enabled: true,
@@ -198,12 +217,21 @@ export const auth = betterAuth({
 			console.log('User:', user);
 			console.log('Verification URL:', url);
 			console.log('Token:', token);
+			let finalUrl: URL | string = url;
+
+			if (!url.includes('localhost')) {
+				finalUrl = new URL(BETTER_AUTH_URL + url);
+			} else {
+				console.log('URL was not found :(');
+			}
 
 			const { data, error } = await resend.emails.send({
-				from: 'User Activity Dashboard <noreply@dashboard.ondrejcizek.cz>',
-				to: user.email,
+				// from: 'User Activity Dashboard <noreply@dashboard.ondrejcizek.cz>',
+				// to: user.email,
+				from: 'User Activity Dashboard <onboarding@resend.dev>',
+				to: 'ondrejj.cizek@icloud.com', // <-- Dynamic, not hardcoded anymore
 				subject: 'Verify your email address',
-				html: `<p>Please verify your email by clicking <a href="${url}">${url}</a>.</p>`
+				html: `<p>Please verify your email by clicking <a href="${finalUrl}">${finalUrl}</a>.</p>`
 			});
 
 			if (error) {

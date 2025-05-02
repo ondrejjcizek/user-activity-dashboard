@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
 	import { RegisterUserZodSchema, UserLoginZodSchema } from '$lib/validations/AuthZodSchemas.js';
 	import * as Form from '$lib/components/ui/form';
@@ -9,13 +9,14 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import { Send } from 'lucide-svelte';
+	import { CircleAlert, MailOpen, Send } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import * as Alert from '$lib/components/ui/alert';
 	import { fade } from 'svelte/transition';
 	import { Separator } from '$lib/components/ui/separator';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { PageServerData } from './$types';
+	import SuperDebug from 'sveltekit-superforms';
 
 	type Props = {
 		data: PageServerData;
@@ -28,14 +29,37 @@
 	const loginForm = superForm(data.loginForm, {
 		resetForm: true,
 		taintedMessage: null,
-		delayMs: 100,
-		timeoutMs: 1000,
+		invalidateAll: true,
 		validators: zodClient(UserLoginZodSchema),
+		onUpdate: async () => {
+			console.warn('updateCardeight');
+			setTimeout(() => {
+				updateCardHeight();
+				// invalidateAll();
+				// goto('/account');
+			}, 100);
+		},
+		onResult: async ({ result }) => {
+			console.log(result);
+			if (result.type === 'redirect') {
+				// await invalidateAll(); // Refresh session-aware data
+				const { data: session } = await authClient.getSession();
+				console.log('Session:', session);
+				goto('/account'); // ✅ redirect after login
+			}
+		},
+		onError: async ({ result }) => {
+			$registerMessage = result.error.message || 'Unknown error';
+		},
+		// onError: (({ result, message }) => void) | 'apply'
+
 		onSubmit: async ({ formData }) => {
 			const email = formData.get('email')?.toString() ?? '';
 			const password = formData.get('password')?.toString() ?? '';
+
 			try {
 				await signInEmail(email, password);
+				goto('/account');
 			} catch (err) {
 				console.error('🔥 Login error:', err);
 				toast.error('Login error');
@@ -64,20 +88,31 @@
 		resetForm: true,
 		taintedMessage: null,
 		validators: zodClient(RegisterUserZodSchema),
-		delayMs: 100,
-		timeoutMs: 1000,
-		onSubmit: async ({ formData }) => {
-			const firstName = formData.get('firstName')?.toString() ?? '';
-			const lastName = formData.get('lastName')?.toString() ?? '';
-			const email = formData.get('email')?.toString() ?? '';
-			const password = formData.get('password')?.toString() ?? '';
-			try {
-				await signUpEmail(firstName, lastName, email, password);
-			} catch (err) {
-				console.error('🔥 Registration error:', err);
-				toast.error('Registration error');
-			}
+		onUpdate: async () => {
+			console.warn('updateCardeight');
+			setTimeout(() => {
+				updateCardHeight();
+			}, 100);
 		}
+		// onSubmit: async ({ formData }) => {
+		// 	const firstName = formData.get('firstName')?.toString() ?? '';
+		// 	const lastName = formData.get('lastName')?.toString() ?? '';
+		// 	const email = formData.get('email')?.toString() ?? '';
+		// 	const password = formData.get('password')?.toString() ?? '';
+		// 	try {
+		// 		await signUpEmail(firstName, lastName, email, password);
+		// 	} catch (err) {
+		// 		console.log(err);
+		// 		console.error('🔥 Registration error:', { err });
+		// 		toast.error('Registration error');
+		// 	}
+		// },
+		// onUpdated: async ({ form }) => {
+		// 	console.log(form);
+		// 	invalidateAll();
+		// 	updateCardHeight();
+		// 	$loginDelayed = false;
+		// }
 	});
 
 	const {
@@ -112,27 +147,38 @@
 		await authClient.signUp.email(
 			{ email, password, name: `${firstName} ${lastName}`, callbackURL: '/account' },
 			{
-				onError: (ctx) => alert(ctx.error.message)
+				onError: (ctx) => {
+					if (ctx.error.status === 403) {
+						alert('Please verify your email address');
+						toast.error('Please verify your email address');
+					}
+					console.log(ctx);
+					toast.error(ctx.error.message);
+					// alert(ctx.error.message);
+					// console.log(ctx.error);
+				}
 			}
 		);
 	};
 
-	const signInEmail = async (email: string, password: string) => {
-		await authClient.signIn.email(
-			{ email, password, callbackURL: '/account' },
-			{
-				onError: (ctx) => {
-					if (ctx.error.status === 403) {
-						alert('Please verify your email address');
-					}
-					alert(ctx.error.message);
-					console.log(ctx.error);
-				},
-				onSuccess: () => {
-					invalidateAll();
-				}
-			}
-		);
+	export const signInEmail = async (email: string, password: string) => {
+		const res = await fetch('/sign-in/email', {
+			method: 'POST',
+			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email, password })
+		});
+
+		if (!res.ok) {
+			const errorBody = await res.json();
+			const message = errorBody?.message || 'Login failed';
+
+			const error = new Error(message);
+			(error as any).code = errorBody?.code;
+			throw error;
+		}
 	};
 
 	let activeTab = $state('login');
@@ -161,7 +207,11 @@
 		updateCardHeight();
 		window?.addEventListener('resize', updateCardHeight);
 	});
+
+	$inspect(data);
 </script>
+
+<SuperDebug data={$loginUserForm} class="w-full" />
 
 <div class="flex w-full items-center justify-center">
 	<div class="flex h-auto w-full items-center justify-center scroll-auto">
@@ -206,6 +256,7 @@
 									class="w-full space-y-4 text-left"
 									method="POST"
 									use:registerUserEnhance
+									action="?/registerForm"
 									onsubmit={registerForm.submit}
 								>
 									<!-- First Name -->
@@ -266,10 +317,10 @@
 									</Form.Button>
 								</form>
 								{#if $registerMessage}
-									<Alert.Root class="">
+									<Alert.Root class="mt-4">
 										<Send class="h-4 w-4" />
 										<Alert.Title class="text-left">Success!</Alert.Title>
-										<Alert.Description class="text-left text-balance">
+										<Alert.Description class="text-left text-pretty">
 											{$registerMessage.alertText}
 										</Alert.Description>
 									</Alert.Root>
@@ -284,6 +335,7 @@
 									class="w-full space-y-4 text-left"
 									method="POST"
 									use:loginUserEnhance
+									action="?/loginForm"
 									onsubmit={loginForm.submit}
 								>
 									<!-- Email -->
@@ -314,18 +366,44 @@
 									<!-- Create Account Button -->
 									<Form.Button class="mt-2 flex w-full gap-4">
 										Log In
-										{#if $loginDelayed && !$loginMessage}
+										{#if $loginDelayed}
 											<Spinner />
 										{/if}
 									</Form.Button>
 								</form>
 								{#if $loginMessage}
-									<Alert.Root class="mt-4 flex-col items-center justify-center">
-										<Send class="h-4 w-4" />
-										<Alert.Title class="text-left">Success!</Alert.Title>
-										<Alert.Description class="text-left text-balance">
-											{$loginMessage.alertText}
-										</Alert.Description>
+									<!-- <Alert.Root
+										class="mt-6 flex max-w-md gap-3 rounded-lg border border-emerald-300 bg-emerald-50 p-4 shadow-sm"
+									>
+										<MailOpen class="mt-[2px] h-4 w-4 shrink-0 text-emerald-600" />
+										<div class="text-emerald-900">
+											<Alert.Description class="mt-0.5 text-sm leading-snug">
+												We've sent you a verification link. Please verify your email before logging
+												in.
+											</Alert.Description>
+										</div>
+									</Alert.Root>
+									<Alert.Root>
+										<MailOpen class="mt-[2px] h-4 w-4 shrink-0 text-emerald-600" />
+										<Alert.Title>Heads up!</Alert.Title>
+										<Alert.Description
+											>You can add components to your app using the cli.</Alert.Description
+										>
+									</Alert.Root>
+
+									<Alert.Root>
+										<Alert.Title>Heads up!</Alert.Title>
+										<Alert.Description
+											>You can add components to your app using the cli.</Alert.Description
+										>
+									</Alert.Root> -->
+									<Alert.Root class="mt-6 flex flex-col items-start" variant="info">
+										<MailOpen class="h-4 w-4 -translate-y-1" />
+										<Alert.Title>Check your inbox</Alert.Title>
+										<Alert.Description class="text-left"
+											>We've sent you a verification link. Please verify your email before logging
+											in.</Alert.Description
+										>
 									</Alert.Root>
 								{/if}
 							</div>
@@ -333,6 +411,16 @@
 
 						{#if $timeout}
 							<p class="error">Something is taking too long. Please try again.</p>
+							<Alert.Root
+								class="mt-6 flex max-w-md items-center justify-center gap-3 rounded-lg border border-emerald-300 bg-emerald-50 p-4 shadow-sm"
+							>
+								<MailOpen class="mt-[2px] h-5 w-5 shrink-0 text-emerald-600" />
+								<div class="text-emerald-900">
+									<Alert.Description class="mt-0.5 text-sm leading-snug">
+										We've sent you a verification link. Please verify your email before logging in.
+									</Alert.Description>
+								</div>
+							</Alert.Root>
 						{/if}
 					</Tabs.Content>
 				</Tabs.Root>
