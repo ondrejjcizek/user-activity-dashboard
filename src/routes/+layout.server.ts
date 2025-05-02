@@ -3,17 +3,10 @@ import { user as userTable } from '$lib/server/db/schema';
 import { redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
-import { auth } from '$lib/auth';
 
-export const load: LayoutServerLoad = async ({ locals, url, request }) => {
-	const sessionData = await auth.api.getSession({ headers: request.headers });
-
+export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const session = locals.session;
 	const userSession = locals.user;
-
-	console.log('✅ Session from locals:', session);
-	console.log('✅ User from locals:', userSession);
-	console.log('✅ SessionData:', sessionData);
 
 	const publicRoutes = ['/login', '/account/activate', '/unauthorized', '/verify-email'];
 

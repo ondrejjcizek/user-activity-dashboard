@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import * as Alert from '$lib/components/ui/alert';
-	import { MailCheck, ShieldCheck, ShieldX } from 'lucide-svelte';
+	import { ShieldCheck, ShieldX } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -10,8 +10,6 @@
 		error?: string;
 		callbackURL: string;
 	};
-
-	console.log(data);
 
 	onMount(() => {
 		if (data.success) {
@@ -27,21 +25,15 @@
 </script>
 
 {#if data.success}
-	<Alert.Root class="mt-4 max-w-fit flex-col items-center justify-center">
+	<Alert.Root class="mx-auto mt-6 flex max-w-fit flex-col items-start" variant="info">
 		<ShieldCheck class="h-4 w-4" />
-		<Alert.Title class="text-left">Email verified successfully!</Alert.Title>
-		<Alert.Description class="text-left text-balance">
-			Redirecting to your account...
-		</Alert.Description>
+		<Alert.Title>Email verified successfully!</Alert.Title>
+		<Alert.Description class="text-left">Redirecting to your account...</Alert.Description>
 	</Alert.Root>
 {:else}
-	<Alert.Root class="mt-4 max-w-fit flex-col items-center justify-center">
+	<Alert.Root class="mx-auto mt-6 flex max-w-fit flex-col items-start" variant="destructive">
 		<ShieldX class="h-4 w-4" />
-		<Alert.Title class="text-left">Email verified successfully!</Alert.Title>
-		<Alert.Description class="text-left text-balance">
-			Redirecting to your account...
-		</Alert.Description>
+		<Alert.Title>Verification failed</Alert.Title>
+		<Alert.Description class="text-left">{data.error}</Alert.Description>
 	</Alert.Root>
-	<h1>Verification failed</h1>
-	<p>{data.error}</p>
 {/if}

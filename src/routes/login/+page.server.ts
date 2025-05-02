@@ -3,7 +3,6 @@ import { RegisterUserZodSchema, UserLoginZodSchema } from '$lib/validations/Auth
 import { redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
 import { fail, message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-// import { authClient } from '$lib/auth-client';
 import { isAPIError } from '$lib/utils';
 
 export const load: ServerLoad = async ({ request }) => {
@@ -74,12 +73,14 @@ export const actions: Actions = {
 		});
 
 		if (!res.ok) {
-			console.error('❌ Login failed', await res.text());
+			const err = await res.json();
+			console.error('❌ Login error response:', err);
+
 			return fail(res.status, {
 				form,
 				message: {
 					alertType: 'error',
-					alertText: 'Login failed. Server returned ' + res.status
+					alertText: err.message || err.error || 'Login failed'
 				}
 			});
 		}

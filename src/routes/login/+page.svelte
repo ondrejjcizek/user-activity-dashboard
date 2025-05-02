@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
 	import { RegisterUserZodSchema, UserLoginZodSchema } from '$lib/validations/AuthZodSchemas.js';
 	import * as Form from '$lib/components/ui/form';
@@ -9,14 +9,13 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import { CircleAlert, MailOpen, Send } from 'lucide-svelte';
+	import { MailOpen } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import * as Alert from '$lib/components/ui/alert';
 	import { fade } from 'svelte/transition';
 	import { Separator } from '$lib/components/ui/separator';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { PageServerData } from './$types';
-	import SuperDebug from 'sveltekit-superforms';
 
 	type Props = {
 		data: PageServerData;
@@ -26,43 +25,28 @@
 
 	const { data, getValue = $bindable(), setValue = $bindable() }: Props = $props();
 
+	let isGoogleSigningIn = $state(false);
+	let isGithubSigningIn = $state(false);
+
 	const loginForm = superForm(data.loginForm, {
 		resetForm: true,
 		taintedMessage: null,
 		invalidateAll: true,
 		validators: zodClient(UserLoginZodSchema),
 		onUpdate: async () => {
-			console.warn('updateCardeight');
 			setTimeout(() => {
 				updateCardHeight();
-				// invalidateAll();
-				// goto('/account');
 			}, 100);
 		},
 		onResult: async ({ result }) => {
-			console.log(result);
-			if (result.type === 'redirect') {
-				// await invalidateAll(); // Refresh session-aware data
-				const { data: session } = await authClient.getSession();
-				console.log('Session:', session);
-				goto('/account'); // ✅ redirect after login
+			if (result.type === 'failure') {
+				const data = result.data as any;
+				const msg = data?.message?.alertText || 'Login failed';
+				toast.error(msg);
 			}
-		},
-		onError: async ({ result }) => {
-			$registerMessage = result.error.message || 'Unknown error';
-		},
-		// onError: (({ result, message }) => void) | 'apply'
 
-		onSubmit: async ({ formData }) => {
-			const email = formData.get('email')?.toString() ?? '';
-			const password = formData.get('password')?.toString() ?? '';
-
-			try {
-				await signInEmail(email, password);
+			if (result.type === 'redirect') {
 				goto('/account');
-			} catch (err) {
-				console.error('🔥 Login error:', err);
-				toast.error('Login error');
 			}
 		}
 	});
@@ -89,30 +73,10 @@
 		taintedMessage: null,
 		validators: zodClient(RegisterUserZodSchema),
 		onUpdate: async () => {
-			console.warn('updateCardeight');
 			setTimeout(() => {
 				updateCardHeight();
 			}, 100);
 		}
-		// onSubmit: async ({ formData }) => {
-		// 	const firstName = formData.get('firstName')?.toString() ?? '';
-		// 	const lastName = formData.get('lastName')?.toString() ?? '';
-		// 	const email = formData.get('email')?.toString() ?? '';
-		// 	const password = formData.get('password')?.toString() ?? '';
-		// 	try {
-		// 		await signUpEmail(firstName, lastName, email, password);
-		// 	} catch (err) {
-		// 		console.log(err);
-		// 		console.error('🔥 Registration error:', { err });
-		// 		toast.error('Registration error');
-		// 	}
-		// },
-		// onUpdated: async ({ form }) => {
-		// 	console.log(form);
-		// 	invalidateAll();
-		// 	updateCardHeight();
-		// 	$loginDelayed = false;
-		// }
 	});
 
 	const {
@@ -122,63 +86,22 @@
 		delayed: registerDelayed
 	} = registerForm;
 
-	const signInGithub = async () => {
-		await authClient.signIn.social({
-			provider: 'github',
-			callbackURL: '/account',
-			errorCallbackURL: '/login'
-		});
-	};
-
-	const signInGoogle = async () => {
-		await authClient.signIn.social({
+	const signInGoogle = () => {
+		isGoogleSigningIn = true;
+		authClient.signIn.social({
 			provider: 'google',
 			callbackURL: '/account',
 			errorCallbackURL: '/login'
 		});
 	};
 
-	const signUpEmail = async (
-		firstName: string,
-		lastName: string,
-		email: string,
-		password: string
-	) => {
-		await authClient.signUp.email(
-			{ email, password, name: `${firstName} ${lastName}`, callbackURL: '/account' },
-			{
-				onError: (ctx) => {
-					if (ctx.error.status === 403) {
-						alert('Please verify your email address');
-						toast.error('Please verify your email address');
-					}
-					console.log(ctx);
-					toast.error(ctx.error.message);
-					// alert(ctx.error.message);
-					// console.log(ctx.error);
-				}
-			}
-		);
-	};
-
-	export const signInEmail = async (email: string, password: string) => {
-		const res = await fetch('/sign-in/email', {
-			method: 'POST',
-			credentials: 'include',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ email, password })
+	const signInGithub = () => {
+		isGithubSigningIn = true;
+		authClient.signIn.social({
+			provider: 'github',
+			callbackURL: '/account',
+			errorCallbackURL: '/login'
 		});
-
-		if (!res.ok) {
-			const errorBody = await res.json();
-			const message = errorBody?.message || 'Login failed';
-
-			const error = new Error(message);
-			(error as any).code = errorBody?.code;
-			throw error;
-		}
 	};
 
 	let activeTab = $state('login');
@@ -188,7 +111,6 @@
 
 	function updateCardHeight() {
 		console.log(activeTab);
-
 		contentEl = document.querySelector('.card-content');
 		if (!contentEl) return;
 
@@ -207,11 +129,7 @@
 		updateCardHeight();
 		window?.addEventListener('resize', updateCardHeight);
 	});
-
-	$inspect(data);
 </script>
-
-<SuperDebug data={$loginUserForm} class="w-full" />
 
 <div class="flex w-full items-center justify-center">
 	<div class="flex h-auto w-full items-center justify-center scroll-auto">
@@ -226,21 +144,43 @@
 
 			<Card.Content class="flex flex-col gap-3">
 				<!-- Google Sign In -->
-				<Button variant="outline" onclick={signInGoogle} class="flex gap-2">
-					<img src="/google-mark.svg" alt="" />
-					Sign in with Google
+				<Button
+					variant="outline"
+					onclick={signInGoogle}
+					class="flex gap-2"
+					disabled={isGoogleSigningIn}
+				>
+					{#if isGoogleSigningIn}
+						<img src="/google-mark.svg" alt="" />
+						Sign in with Google
+						<Spinner reverse />
+					{:else}
+						<img src="/google-mark.svg" alt="" />
+						Sign in with Google
+					{/if}
 				</Button>
 
 				<!-- GitHub Sign In -->
-				<Button variant="outline" onclick={signInGithub} class="flex gap-2">
-					<img class="flex dark:hidden" src="/github-mark.svg" alt="" />
-					<img class="hidden dark:flex" src="/github-mark-white.svg" alt="" />
-					Sign in with GitHub
+				<Button
+					variant="outline"
+					onclick={signInGithub}
+					class="flex gap-2"
+					disabled={isGithubSigningIn}
+				>
+					{#if isGithubSigningIn}
+						<img class="flex dark:hidden" src="/github-mark.svg" alt="" />
+						<img class="hidden dark:flex" src="/github-mark-white.svg" alt="" />
+						Sign in with GitHub
+						<Spinner reverse />
+					{:else}
+						<img class="flex dark:hidden" src="/github-mark.svg" alt="" />
+						<img class="hidden dark:flex" src="/github-mark-white.svg" alt="" />
+						Sign in with GitHub
+					{/if}
 				</Button>
 			</Card.Content>
 
 			<Card.Footer class="flex flex-col gap-6 text-center">
-				<!-- <p class="text-gray-600 dark:text-white">or</p> -->
 				<Separator />
 				<h2 class="text-xl font-semibold">E-mail</h2>
 
@@ -308,8 +248,8 @@
 										</Form.Control>
 										<Form.FieldErrors />
 									</Form.Field>
-									<!-- Create Account Button -->
-									<Form.Button class="mt-2 flex w-full gap-4">
+									<!-- Register Button -->
+									<Form.Button class="mt-2 flex w-full gap-4" disabled={$registerDelayed}>
 										Create account
 										{#if $registerDelayed}
 											<Spinner />
@@ -317,12 +257,13 @@
 									</Form.Button>
 								</form>
 								{#if $registerMessage}
-									<Alert.Root class="mt-4">
-										<Send class="h-4 w-4" />
-										<Alert.Title class="text-left">Success!</Alert.Title>
-										<Alert.Description class="text-left text-pretty">
-											{$registerMessage.alertText}
-										</Alert.Description>
+									<Alert.Root class="mt-6 flex flex-col items-start" variant="info">
+										<MailOpen class="h-4 w-4 -translate-y-1" />
+										<Alert.Title>Check your inbox</Alert.Title>
+										<Alert.Description class="text-left"
+											>We've sent you a verification link. Please verify your email before logging
+											in.</Alert.Description
+										>
 									</Alert.Root>
 								{/if}
 							</div>
@@ -363,8 +304,8 @@
 										</Form.Control>
 										<Form.FieldErrors />
 									</Form.Field>
-									<!-- Create Account Button -->
-									<Form.Button class="mt-2 flex w-full gap-4">
+									<!-- Login Button -->
+									<Form.Button class="mt-2 flex w-full gap-4" disabled={$loginDelayed}>
 										Log In
 										{#if $loginDelayed}
 											<Spinner />
@@ -372,31 +313,6 @@
 									</Form.Button>
 								</form>
 								{#if $loginMessage}
-									<!-- <Alert.Root
-										class="mt-6 flex max-w-md gap-3 rounded-lg border border-emerald-300 bg-emerald-50 p-4 shadow-sm"
-									>
-										<MailOpen class="mt-[2px] h-4 w-4 shrink-0 text-emerald-600" />
-										<div class="text-emerald-900">
-											<Alert.Description class="mt-0.5 text-sm leading-snug">
-												We've sent you a verification link. Please verify your email before logging
-												in.
-											</Alert.Description>
-										</div>
-									</Alert.Root>
-									<Alert.Root>
-										<MailOpen class="mt-[2px] h-4 w-4 shrink-0 text-emerald-600" />
-										<Alert.Title>Heads up!</Alert.Title>
-										<Alert.Description
-											>You can add components to your app using the cli.</Alert.Description
-										>
-									</Alert.Root>
-
-									<Alert.Root>
-										<Alert.Title>Heads up!</Alert.Title>
-										<Alert.Description
-											>You can add components to your app using the cli.</Alert.Description
-										>
-									</Alert.Root> -->
 									<Alert.Root class="mt-6 flex flex-col items-start" variant="info">
 										<MailOpen class="h-4 w-4 -translate-y-1" />
 										<Alert.Title>Check your inbox</Alert.Title>
@@ -410,16 +326,11 @@
 						{/if}
 
 						{#if $timeout}
-							<p class="error">Something is taking too long. Please try again.</p>
-							<Alert.Root
-								class="mt-6 flex max-w-md items-center justify-center gap-3 rounded-lg border border-emerald-300 bg-emerald-50 p-4 shadow-sm"
-							>
-								<MailOpen class="mt-[2px] h-5 w-5 shrink-0 text-emerald-600" />
-								<div class="text-emerald-900">
-									<Alert.Description class="mt-0.5 text-sm leading-snug">
-										We've sent you a verification link. Please verify your email before logging in.
-									</Alert.Description>
-								</div>
+							<Alert.Root class="mt-6 flex flex-col items-start" variant="info">
+								<Alert.Title>Weird</Alert.Title>
+								<Alert.Description class="text-left"
+									>Something is taking too long. Please try again.</Alert.Description
+								>
 							</Alert.Root>
 						{/if}
 					</Tabs.Content>

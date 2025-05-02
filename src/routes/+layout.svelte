@@ -11,9 +11,7 @@
 		data: LayoutServerData;
 	};
 
-	const { children, data }: Props = $props();
-
-	// $inspect(data);
+	const { children }: Props = $props();
 
 	type Position = 'top-center' | 'bottom-center';
 	const positions = {
@@ -26,7 +24,6 @@
 	$effect(() => {
 		const url = new URL(window.location.href);
 		const error = url.searchParams.get('error');
-		// const success = url.searchParams.get('success');
 
 		if (error === 'unauthenticated') {
 			toast.info('Welcome back!');
@@ -37,10 +34,6 @@
 		if (error === 'forbidden') {
 			toast.error('Access denied.');
 		}
-
-		// if (success === 'login') {
-		// 	toast.success('Welcome back!');
-		// }
 
 		const mediaQuery = window.matchMedia('(max-width: 768px)');
 		const updatePosition = () => {
