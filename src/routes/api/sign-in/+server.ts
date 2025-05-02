@@ -1,13 +1,14 @@
 // src/routes/api/sign-in/+server.ts
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
+// process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 import { json } from '@sveltejs/kit';
 import * as setCookie from 'set-cookie-parser';
+import { BETTER_AUTH_URL } from '$env/static/private';
 
 export async function POST({ request, cookies }) {
 	const body = await request.json();
 
 	// ⛳️ použij raw fetch přes native Request
-	const response = await fetch('https://localhost:5173/api/auth/sign-in/email', {
+	const response = await fetch(`${BETTER_AUTH_URL}/api/auth/sign-in/email`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
