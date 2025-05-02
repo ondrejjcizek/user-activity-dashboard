@@ -110,7 +110,7 @@
 	let contentElChilds: HTMLElement[] | null = null;
 
 	function updateCardHeight() {
-		console.log(activeTab);
+		const _ = activeTab;
 		contentEl = document.querySelector('.card-content');
 		if (!contentEl) return;
 

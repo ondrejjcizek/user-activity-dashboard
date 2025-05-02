@@ -102,7 +102,7 @@ export const auth = betterAuth({
 			if (!url.includes('localhost')) {
 				finalUrl = new URL(BETTER_AUTH_URL + url);
 			} else if (!url.includes('dashboard.ondrejcizek.cz')) {
-				finalUrl = new URL(BETTER_AUTH_URL + url);
+				finalUrl = new URL(url);
 			} else {
 				console.log('URL was not found :(');
 			}
