@@ -105,13 +105,11 @@ export const auth = betterAuth({
 				console.log('URL was not found :(');
 			}
 
-			const isDev = process.env.NODE_ENV === 'development';
-
 			const { data, error } = await resend.emails.send({
-				from: isDev
-					? 'User Activity Dashboard <onboarding@resend.dev>'
-					: 'User Activity Dashboard <noreply@dashboard.ondrejcizek.cz>',
-				to: isDev ? 'ondrejj.cizek@icloud.com' : user.email,
+				from: 'User Activity Dashboard <noreply@dashboard.ondrejcizek.cz>',
+				to: user.email,
+				// from: 'User Activity Dashboard <onboarding@resend.dev>',
+				// to: 'ondrejj.cizek@icloud.com', // <-- Dynamic, not hardcoded anymore
 				subject: 'Verify your email address',
 				html: `<p>Please verify your email by clicking <a href="${finalUrl}">${finalUrl}</a>.</p>`
 			});
