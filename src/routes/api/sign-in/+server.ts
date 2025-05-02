@@ -1,6 +1,5 @@
 // src/routes/api/sign-in/+server.ts
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
-import { auth } from '$lib/auth';
 import { json } from '@sveltejs/kit';
 import * as setCookie from 'set-cookie-parser';
 
@@ -25,7 +24,7 @@ export async function POST({ request, cookies }) {
 			cookies.set(cookie.name, cookie.value, {
 				path: cookie.path || '/',
 				httpOnly: cookie.httpOnly,
-				secure: false, // pouze na localhostu
+				secure: process.env.NODE_ENV !== 'development',
 				sameSite: cookie.sameSite as 'lax' | 'strict' | 'none',
 				maxAge: cookie.maxAge
 			});
