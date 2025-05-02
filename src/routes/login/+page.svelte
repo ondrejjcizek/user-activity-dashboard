@@ -36,7 +36,7 @@
 		onUpdate: async () => {
 			setTimeout(() => {
 				updateCardHeight();
-			}, 100);
+			}, 600);
 		},
 		onResult: async ({ result }) => {
 			if (result.type === 'failure') {
@@ -75,7 +75,7 @@
 		onUpdate: async () => {
 			setTimeout(() => {
 				updateCardHeight();
-			}, 100);
+			}, 600);
 		}
 	});
 

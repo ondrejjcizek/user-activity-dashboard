@@ -101,19 +101,38 @@ export const auth = betterAuth({
 
 			if (!url.includes('localhost')) {
 				finalUrl = new URL(BETTER_AUTH_URL + url);
-			} else if (!url.includes('dashboard.ondrejcizek.cz')) {
-				finalUrl = new URL(url);
-			} else {
-				console.log('URL was not found :(');
 			}
+			// else if (!url.includes('dashboard')) {
+			// 	finalUrl = new URL(url);
+			// } else {
+			// 	console.log('URL was not found :(');
+			// }
 
 			const { data, error } = await resend.emails.send({
 				from: 'User Activity Dashboard <noreply@dashboard.ondrejcizek.cz>',
 				to: user.email,
-				// from: 'User Activity Dashboard <onboarding@resend.dev>',
-				// to: 'ondrejj.cizek@icloud.com', // <-- Dynamic, not hardcoded anymore
 				subject: 'Verify your email address',
-				html: `<p>Please verify your email by clicking <a href="${finalUrl}">${finalUrl}</a>.</p>`
+				html: `
+					<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; color: #333; line-height: 1.6; font-size: 16px;">
+						<p>Hi ${user.name || 'there'},</p>
+
+						<p>Thank you for signing up. Please verify your email address by clicking the link below:</p>
+
+						<p>
+							<a href="${finalUrl}" style="background-color: #4CAF50; color: white; padding: 10px 16px; text-decoration: none; border-radius: 4px; display: inline-block;">
+								Verify Account
+							</a>
+						</p>
+
+						<p>If you didn’t request this email, you can safely ignore it.</p>
+
+						<hr style="margin-top: 40px; border: none; border-top: 1px solid #ddd;" />
+
+						<p style="font-size: 12px; color: #888;">
+							This message was sent by <strong>dashboard.ondrejcizek.cz</strong>.
+						</p>
+					</div>
+				`
 			});
 
 			if (error) {
