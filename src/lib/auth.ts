@@ -78,19 +78,18 @@ export const auth = betterAuth({
 				})
 				.where(eq(userTable.id, dbUser.id));
 
-			if (email === ADMIN_ACCOUNT && dbUser.role !== 'Admin') {
+			const adminAccounts = process.env.ADMIN_ACCOUNTS?.split(',') ?? [];
+
+			if (adminAccounts.includes(email) && dbUser.role !== 'Admin') {
 				console.log(`🛡️ Promoting ${email} to Admin`);
 				await db.update(userTable).set({ role: 'Admin' }).where(eq(userTable.id, dbUser.id));
 
-				// Re-fetch updated user and inject it into session
 				const [updatedUser] = await db.select().from(userTable).where(eq(userTable.email, email));
-				if (updatedUser) {
-					if (ctx.context.newSession) {
-						ctx.context.newSession.user = {
-							...ctx.context.newSession.user,
-							...updatedUser
-						};
-					}
+				if (updatedUser && ctx.context.newSession) {
+					ctx.context.newSession.user = {
+						...ctx.context.newSession.user,
+						...updatedUser
+					};
 				}
 			}
 
