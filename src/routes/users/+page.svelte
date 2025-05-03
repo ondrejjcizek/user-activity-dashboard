@@ -87,8 +87,8 @@
 	});
 
 	const today = new Date();
-	const last90Days = Array.from({ length: 90 }, (_, i) =>
-		format(subDays(today, 89 - i), 'yyyy-MM-dd')
+	const last90Days = Array.from({ length: 30 }, (_, i) =>
+		format(subDays(today, 29 - i), 'yyyy-MM-dd')
 	);
 
 	let historyMap = Object.fromEntries(last90Days.map((d) => [d, 0]));
@@ -194,8 +194,8 @@
 		});
 
 		const interval = setInterval(() => {
-			invalidateAll(); // forces a refetch from the load function
-		}, 10000); // 1 second
+			invalidateAll();
+		}, 10000);
 
 		return () => clearInterval(interval);
 	});
@@ -208,10 +208,18 @@
 </script>
 
 {#if page.state.selected}
-	<Drawer.Root open={isDrawerOpen} onClose={closeDrawer}>
+	<Drawer.Root
+		open={isDrawerOpen}
+		onClose={closeDrawer}
+		shouldScaleBackground
+		setBackgroundColorOnScale={true}
+	>
+		<!-- <Drawer.Portal> -->
+		<!-- <Drawer.Overlay class="fixed inset-0" /> -->
 		<Drawer.Content class="px-6">
 			<UserDetailPage data={page.state.selected} />
 		</Drawer.Content>
+		<!-- </Drawer.Portal> -->
 	</Drawer.Root>
 {/if}
 
@@ -228,7 +236,7 @@
 </h1>
 
 <div class="w-full overflow-x-auto pb-8">
-	<canvas bind:this={canvas} class="h-[300px] w-full max-w-full"></canvas>
+	<canvas bind:this={canvas} class="h-[300px] w-full max-w-full" data-lenis-prevent></canvas>
 </div>
 
 <Card.Root class="w-full">

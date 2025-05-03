@@ -53,9 +53,9 @@ export const auth = betterAuth({
 				console.log('🆕 Generating initial login history for:', dbUser.id);
 
 				const loginEntries = generateLoginHistory(dbUser.id, {
-					daysBack: 90,
-					minPerDay: 1,
-					maxPerDay: 5,
+					daysBack: 30,
+					minPerDay: 0,
+					maxPerDay: 7,
 					suspicious: false
 				});
 

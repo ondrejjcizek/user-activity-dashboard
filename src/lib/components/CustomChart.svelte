@@ -13,5 +13,6 @@
 </script>
 
 <div class="w-full overflow-x-auto">
-	<canvas bind:this={canvasEl} class="h-[300px] w-full max-w-full sm:h-[400px]"></canvas>
+	<canvas bind:this={canvasEl} class="h-[300px] w-full max-w-full sm:h-[400px]" data-lenis-prevent
+	></canvas>
 </div>

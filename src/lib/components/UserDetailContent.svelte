@@ -21,8 +21,8 @@
 	let chartInstance: Chart<'line'> | null = null;
 
 	const today = new Date();
-	const last90Days = Array.from({ length: 90 }, (_, i) =>
-		format(subDays(today, 89 - i), 'yyyy-MM-dd')
+	const last90Days = Array.from({ length: 30 }, (_, i) =>
+		format(subDays(today, 29 - i), 'yyyy-MM-dd')
 	);
 
 	let historyMap = Object.fromEntries(last90Days.map((d) => [d, 0]));
@@ -139,5 +139,6 @@
 
 <div class="flex w-full flex-col items-center gap-12">
 	<UserCard user={data.user} activity={data.activity} />
-	<canvas bind:this={canvas} class="h-[200px] w-full max-w-full sm:h-[300px]"></canvas>
+	<canvas bind:this={canvas} class="h-[200px] w-full max-w-full sm:h-[300px]" data-lenis-prevent
+	></canvas>
 </div>

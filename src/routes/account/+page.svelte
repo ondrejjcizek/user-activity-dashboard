@@ -50,8 +50,8 @@
 	import { subDays, format } from 'date-fns';
 
 	const today = new Date();
-	const last90Days = Array.from({ length: 90 }, (_, i) =>
-		format(subDays(today, 89 - i), 'yyyy-MM-dd')
+	const last90Days = Array.from({ length: 30 }, (_, i) =>
+		format(subDays(today, 29 - i), 'yyyy-MM-dd')
 	);
 
 	let historyMap = Object.fromEntries(last90Days.map((d) => [d, 0]));
@@ -64,7 +64,7 @@
 	});
 
 	const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-	const sliceDays = isMobile ? 30 : 90;
+	const sliceDays = isMobile ? 30 : 30;
 
 	const chartLabels = Object.keys(historyMap).slice(-sliceDays);
 	const chartData = Object.values(historyMap).slice(-sliceDays);
@@ -271,7 +271,11 @@
 			</Card.Root>
 
 			<div class="w-full overflow-x-auto">
-				<canvas bind:this={canvas} class="h-[300px] w-full max-w-full sm:h-[400px]"></canvas>
+				<canvas
+					bind:this={canvas}
+					class="h-[300px] w-full max-w-full sm:h-[400px]"
+					data-lenis-prevent
+				></canvas>
 			</div>
 
 			<!-- Login History Card -->

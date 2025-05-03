@@ -16,7 +16,7 @@ await db.delete(user);
 console.log('🌱 Starting seeding...');
 
 const now = new Date();
-const daysBack = 90;
+const daysBack = 30;
 const suspiciousUserCount = 2;
 
 // 👥 30 uživatelů
