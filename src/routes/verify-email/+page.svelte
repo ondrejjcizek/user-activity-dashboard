@@ -17,7 +17,7 @@
 			setTimeout(() => {
 				goto('/login');
 				toast.success('Your account was verified successfully!');
-			}, 1000); // slight delay for session cookie to attach
+			}, 3000);
 		} else {
 			console.error('❌ Verification failed:', data.error);
 		}

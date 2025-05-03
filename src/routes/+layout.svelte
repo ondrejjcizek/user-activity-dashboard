@@ -11,7 +11,8 @@
 		data: LayoutServerData;
 	};
 
-	const { children }: Props = $props();
+	const { children, data }: Props = $props();
+	// $inspect(data);
 
 	type Position = 'top-center' | 'bottom-center';
 	const positions = {
@@ -33,6 +34,16 @@
 		}
 		if (error === 'forbidden') {
 			toast.error('Access denied.');
+		}
+
+		const flash = document.cookie
+			.split('; ')
+			.find((row) => row.startsWith('flash='))
+			?.split('=')[1];
+
+		if (flash) {
+			toast.error(decodeURIComponent(flash)); // zobraz toast
+			document.cookie = 'flash=; Max-Age=0'; // smaž cookie
 		}
 
 		const mediaQuery = window.matchMedia('(max-width: 768px)');

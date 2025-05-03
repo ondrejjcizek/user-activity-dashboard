@@ -1,26 +1,20 @@
-// src/lib/auth.ts
 import { betterAuth } from 'better-auth';
 import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import { loginHistory, user as userTable } from '$lib/server/db/schema';
-// import { jwtVerify, decodeJwt } from 'jose';
 import { Resend } from 'resend';
 import { RESEND_API_KEY } from '$env/static/private';
-// import { customSession } from 'better-auth/plugins';
-
-import { eq, type InferInsertModel } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { generateLoginHistory } from '$lib/utils/generateLoginHistory';
 import {
 	GITHUB_CLIENT_ID,
 	GITHUB_CLIENT_SECRET,
 	GOOGLE_CLIENT_ID,
 	GOOGLE_CLIENT_SECRET,
-	BETTER_AUTH_URL
+	BETTER_AUTH_URL,
+	ADMIN_ACCOUNT
 } from '$env/static/private';
-import { faker } from '@faker-js/faker';
-import { randomUUID } from 'crypto';
-
-type NewLogin = InferInsertModel<typeof loginHistory>;
 
 const resend = new Resend(RESEND_API_KEY);
 
@@ -38,31 +32,65 @@ export const auth = betterAuth({
 			const [dbUser] = await db.select().from(userTable).where(eq(userTable.email, email));
 			if (!dbUser) return;
 
-			// ✅ 0. Generate fake login history if missing
-			const [loginEntry] = await db.query.loginHistory.findMany({
-				where: (lh, { eq }) => eq(lh.userId, dbUser.id),
-				limit: 1
+			const hasHistory = await db.query.loginHistory.findFirst({
+				where: (lh, { eq }) => eq(lh.userId, dbUser.id)
 			});
 
-			if (!loginEntry) {
+			if (!hasHistory) {
 				console.log('🆕 Generating initial login history for:', dbUser.id);
 
-				const loginEntries: NewLogin[] = Array.from({
-					length: faker.number.int({ min: 5, max: 10 })
-				}).map(() => ({
-					id: randomUUID(),
-					userId: dbUser.id,
-					date: faker.date.recent({ days: 30 }),
-					device: faker.helpers.arrayElement(['mobile', 'tablet', 'desktop']),
-					browser: faker.internet.userAgent(),
-					ip: faker.internet.ip()
-				}));
+				const loginEntries = generateLoginHistory(dbUser.id, {
+					daysBack: 90,
+					minPerDay: 1,
+					maxPerDay: 5,
+					suspicious: true
+				});
 
 				try {
 					await db.insert(loginHistory).values(loginEntries);
 					console.log(`✅ Login history generated for user ${dbUser.id}`);
 				} catch (err) {
 					console.error('❌ Failed inserting login history:', err);
+				}
+			}
+
+			// ✅ Always add new login entry
+			const newLoginEntry = {
+				id: crypto.randomUUID(),
+				userId: dbUser.id,
+				date: new Date(),
+				device: ctx.context.request?.headers.get('user-agent')?.includes('Mobile')
+					? 'mobile'
+					: 'desktop',
+				browser: ctx.context.request?.headers.get('user-agent') || 'unknown',
+				ip: ctx.context.request?.headers.get('x-forwarded-for') || ''
+			};
+
+			await db.insert(loginHistory).values(newLoginEntry);
+
+			// Update user activity
+			await db
+				.update(userTable)
+				.set({
+					status: 'online',
+					lastActive: new Date(),
+					updatedAt: new Date()
+				})
+				.where(eq(userTable.id, dbUser.id));
+
+			if (email === ADMIN_ACCOUNT && dbUser.role !== 'Admin') {
+				console.log(`🛡️ Promoting ${email} to Admin`);
+				await db.update(userTable).set({ role: 'Admin' }).where(eq(userTable.id, dbUser.id));
+
+				// Re-fetch updated user and inject it into session
+				const [updatedUser] = await db.select().from(userTable).where(eq(userTable.email, email));
+				if (updatedUser) {
+					if (ctx.context.newSession) {
+						ctx.context.newSession.user = {
+							...ctx.context.newSession.user,
+							...updatedUser
+						};
+					}
 				}
 			}
 
@@ -93,13 +121,9 @@ export const auth = betterAuth({
 	emailVerification: {
 		autoSignInAfterVerification: true,
 		sendVerificationEmail: async ({ user, url, token }) => {
-			console.log('📨 sendVerificationEmail called with:');
-			console.log('User:', user);
-			console.log('Verification URL:', url);
-			console.log('Token:', token);
+			console.log('📨 sendVerificationEmail called with:', { user, url, token });
 
 			let finalUrl: string;
-
 			try {
 				finalUrl = new URL(url).toString();
 			} catch {

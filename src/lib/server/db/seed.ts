@@ -15,10 +15,12 @@ await db.delete(user);
 
 console.log('🌱 Starting seeding...');
 
-// 🧑‍💼 Vygenerujeme 20 uživatelů
 const now = new Date();
+const daysBack = 90;
+const suspiciousUserCount = 5;
 
-const usersToInsert: NewUser[] = Array.from({ length: 20 }).map(() => {
+// 👥 30 uživatelů
+const usersToInsert: NewUser[] = Array.from({ length: 30 }).map((_, i) => {
 	const id = randomUUID();
 	const name = faker.person.fullName();
 	const email = faker.internet.email({ firstName: name.split(' ')[0] });
@@ -29,34 +31,59 @@ const usersToInsert: NewUser[] = Array.from({ length: 20 }).map(() => {
 		email,
 		emailVerified: true,
 		image: faker.image.avatar(),
-		createdAt: now,
+		createdAt: faker.date.past({ years: 1 }),
 		updatedAt: now,
 		status: faker.helpers.arrayElement(['online', 'offline']),
-		role: faker.helpers.arrayElement(['Admin', 'User']),
-		lastActive: faker.date.recent({ days: 10 }) // ✅ must be a `Date`, not number
+		role: i === 0 ? 'Admin' : 'User',
+		lastActive: faker.date.recent({ days: 3 })
 	};
 });
 
-// ✅ Vlož uživatele
 await db.insert(user).values(usersToInsert);
 
-// 📊 Vygeneruj přihlašovací historii
-const loginEntries: NewLogin[] = usersToInsert.flatMap((u) => {
-	const loginCount = faker.number.int({ min: 5, max: 15 });
+// 🕵️‍♂️ Vyber náhodně podezřelé uživatele
+const suspiciousUserIds = faker.helpers.arrayElements(
+	usersToInsert.map((u) => u.id),
+	suspiciousUserCount
+);
 
-	return Array.from({ length: loginCount }).map(() => ({
-		id: randomUUID(),
-		userId: u.id, // ✅ camelCase to match the model
-		date: faker.date.recent({ days: 30 }), // ✅ must be a `Date`, not number
-		device: faker.helpers.arrayElement(['desktop', 'mobile', 'tablet']),
-		browser: faker.internet.userAgent(),
-		ip: faker.internet.ip()
-	}));
-});
+// 📊 Generuj historii přihlášení
+const loginEntries: NewLogin[] = [];
 
-// ✅ Vlož login záznamy
+for (const u of usersToInsert) {
+	const isSuspicious = suspiciousUserIds.includes(u.id);
+
+	for (let i = 0; i < daysBack; i++) {
+		const day = new Date();
+		day.setDate(now.getDate() - i);
+		day.setHours(0, 0, 0, 0);
+
+		let loginsToday = faker.number.int({ min: 0, max: 3 });
+
+		// Vytvoř extrémní aktivitu pro podezřelé uživatele
+		if (isSuspicious && [5, 12, 24, 30, 45, 59].includes(i)) {
+			loginsToday = faker.number.int({ min: 12, max: 25 });
+		}
+
+		for (let j = 0; j < loginsToday; j++) {
+			loginEntries.push({
+				id: randomUUID(),
+				userId: u.id,
+				date: faker.date.between({
+					from: new Date(day),
+					to: new Date(day.getTime() + 1000 * 60 * 60 * 23)
+				}),
+				device: faker.helpers.arrayElement(['desktop', 'mobile', 'tablet']),
+				browser: faker.internet.userAgent(),
+				ip: faker.internet.ip()
+			});
+		}
+	}
+}
+
 await db.insert(loginHistory).values(loginEntries);
 
 console.log('✅ Seeding complete!');
 console.log(`👤 Users: ${usersToInsert.length}`);
 console.log(`🔐 Logins: ${loginEntries.length}`);
+console.log(`🕵️ Suspicious users: ${suspiciousUserIds.length}`);

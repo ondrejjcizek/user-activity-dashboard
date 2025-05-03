@@ -5,6 +5,11 @@ import { fail, message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { isAPIError } from '$lib/utils';
 
+// ⛑️ Disable cert validation only in dev
+if (process.env.NODE_ENV === 'development') {
+	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 export const load: ServerLoad = async ({ request }) => {
 	const registerForm = await superValidate(zod(RegisterUserZodSchema));
 	const loginForm = await superValidate(zod(UserLoginZodSchema));
@@ -59,32 +64,41 @@ export const actions: Actions = {
 	},
 	loginForm: async (event) => {
 		const form = await superValidate(event, zod(UserLoginZodSchema));
-		if (!form.valid) return fail(400, { form });
+
+		if (!form.valid) return fail(400, { loginForm: form });
+
+		const { email, password } = form.data;
 
 		const res = await event.fetch('/api/sign-in', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({
-				email: form.data.email,
-				password: form.data.password
-			})
+			body: JSON.stringify({ email, password })
 		});
 
 		if (!res.ok) {
-			const err = await res.json();
-			console.error('❌ Login error response:', err);
+			let err = { message: 'Login failed' };
+
+			try {
+				err = await res.json(); // ⚠️ pokud to není JSON, try-catch to převezme
+			} catch (e) {
+				console.log(e);
+				console.warn('⚠️ Failed to parse login response as JSON');
+			}
+
+			console.error('❌ Login failed:', err);
 
 			return fail(res.status, {
-				form,
+				loginForm: form,
 				message: {
 					alertType: 'error',
-					alertText: err.message || err.error || 'Login failed'
+					alertText: err.message || 'Login failed'
 				}
 			});
 		}
 
+		// Success → redirect
 		throw redirect(303, '/account');
 	}
 };

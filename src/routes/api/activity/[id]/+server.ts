@@ -30,7 +30,7 @@ export const GET = async ({ params }) => {
 			loginsLast30Days: recent30.length,
 			loginsLast3Days: recent3.length,
 			lastActive: last,
-			history: recent30 // Optional: all recent entries
+			history
 		});
 	} catch (err) {
 		console.error('❌ Failed to load activity:', err);

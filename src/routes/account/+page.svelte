@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { PageData, PageServerData } from './$types';
+	import type { PageData } from './$types';
+	import type { LayoutServerData } from '../$types';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
@@ -7,7 +8,6 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import {
-		User,
 		Mail,
 		Calendar,
 		Clock,
@@ -21,17 +21,20 @@
 	} from 'lucide-svelte';
 	import { authClient } from '$lib/auth-client';
 	import { invalidateAll } from '$app/navigation';
+	import Chart from 'chart.js/auto';
+	// import zoomPlugin from 'chartjs-plugin-zoom';
+
 	type Props = {
-		data: PageServerData;
+		data: LayoutServerData & PageData;
 	};
+
+	const { data }: Props = $props();
 
 	const signOut = async () => {
 		await authClient.signOut();
 
 		invalidateAll();
 	};
-
-	const { data }: Props = $props();
 
 	const formatDate = (date: Date) => {
 		return date.toLocaleString();
@@ -44,6 +47,131 @@
 
 		return initials;
 	};
+
+	let canvas: HTMLCanvasElement | null = $state(null);
+
+	import { subDays, format, isSameDay } from 'date-fns';
+
+	const today = new Date();
+	const last90Days = Array.from({ length: 90 }, (_, i) =>
+		format(subDays(today, 89 - i), 'yyyy-MM-dd')
+	);
+
+	let historyMap = Object.fromEntries(last90Days.map((d) => [d, 0]));
+
+	data.activity?.history.forEach((entry) => {
+		const dateStr = format(new Date(entry.date), 'yyyy-MM-dd');
+		if (historyMap[dateStr] !== undefined) {
+			historyMap[dateStr]++;
+		}
+	});
+
+	const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+	const sliceDays = isMobile ? 30 : 90;
+
+	const chartLabels = Object.keys(historyMap).slice(-sliceDays);
+	const chartData = Object.values(historyMap).slice(-sliceDays);
+
+	const backgroundColors = chartData.map((val) =>
+		val >= 8 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(99, 102, 241, 0.2)'
+	);
+
+	const pointBackgroundColors = chartData.map((val) =>
+		val >= 8 ? 'rgb(239, 68, 68)' : 'rgb(99, 102, 241)'
+	);
+
+	$effect(() => {
+		if (!canvas || typeof window === 'undefined') return;
+
+		const renderChart = async () => {
+			const { default: zoomPlugin } = await import('chartjs-plugin-zoom');
+			Chart.register(zoomPlugin);
+
+			if (canvas instanceof HTMLCanvasElement) {
+				new Chart(canvas, {
+					type: 'line',
+					data: {
+						labels: chartLabels,
+						datasets: [
+							{
+								label: 'Logins per day',
+								data: chartData,
+								fill: true,
+								borderColor: 'rgb(99, 102, 241)',
+								backgroundColor: backgroundColors,
+								tension: 0.3,
+								pointBackgroundColor: pointBackgroundColors,
+								pointRadius: 4,
+								pointHoverRadius: 6
+							}
+						]
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						scales: {
+							x: {
+								ticks: {
+									callback: (value, index) => {
+										const label = chartLabels[index];
+										return window.innerWidth < 640 ? label.slice(5) : label;
+									}
+								}
+							},
+							y: {
+								beginAtZero: true,
+								ticks: {
+									stepSize: 1
+								}
+							}
+						},
+						plugins: {
+							tooltip: {
+								callbacks: {
+									label: function (context) {
+										const value = context.raw as number;
+										const base = `Logins: ${value}`;
+										return value >= 8 ? `${base} ⚠️ Suspicious activity` : base;
+									}
+								}
+							},
+							zoom: {
+								pan: {
+									enabled: true,
+									mode: 'x'
+								},
+								zoom: {
+									wheel: { enabled: true },
+									pinch: { enabled: true },
+									mode: 'x'
+								}
+							},
+							legend: {
+								labels: {
+									generateLabels(chart) {
+										const original = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+										return [
+											...original,
+											{
+												text: 'Suspicious activity (≥ 8 logins)',
+												fillStyle: 'rgb(239, 68, 68)',
+												strokeStyle: 'rgb(239, 68, 68)',
+												lineWidth: 2,
+												hidden: false,
+												index: original.length
+											}
+										];
+									}
+								}
+							}
+						}
+					}
+				});
+			}
+		};
+
+		renderChart();
+	});
 </script>
 
 <div class="container mx-auto">
@@ -75,6 +203,11 @@
 									{data.session.user.email}
 								</Card.Description>
 							</div>
+							<Badge variant="secondary">
+								{#if data.session && data.user}
+									<p>You are logged in with the {data.user.role} role</p>
+								{/if}
+							</Badge>
 						</div>
 						<Button
 							class="h-13 cursor-pointer"
@@ -132,8 +265,12 @@
 				</Card.Content>
 			</Card.Root>
 
+			<div class="w-full overflow-x-auto">
+				<canvas bind:this={canvas} class="h-[300px] w-full max-w-full sm:h-[400px]"></canvas>
+			</div>
+
 			<!-- Login History Card -->
-			<Card.Root class="w-full">
+			<!-- <Card.Root class="w-full">
 				<Card.Header>
 					<Card.Title class="flex items-center">
 						<Shield class="mr-2 h-5 w-5" />
@@ -189,13 +326,7 @@
 						</div>
 					</div>
 				</Card.Content>
-				<!-- <Card.Footer class="flex justify-end">
-					<Button variant="outline" size="sm">
-						<Shield class="mr-2 h-4 w-4" />
-						Security Settings
-					</Button>
-				</Card.Footer> -->
-			</Card.Root>
+			</Card.Root> -->
 		</div>
 	{/if}
 </div>
