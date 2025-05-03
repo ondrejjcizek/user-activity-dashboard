@@ -87,6 +87,7 @@ const config = {
         		"accordion-down": "accordion-down 0.2s ease-out",
         		"accordion-up": "accordion-up 0.2s ease-out",
        			"caret-blink": "caret-blink 1.25s ease-out infinite",
+				'ping-slow': 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite'
       		},
 			transitionTimingFunction: {
 				'in-expo': 'cubic-bezier(0.95, 0.05, 0.795, 0.035)',

@@ -17,10 +17,10 @@ console.log('🌱 Starting seeding...');
 
 const now = new Date();
 const daysBack = 90;
-const suspiciousUserCount = 5;
+const suspiciousUserCount = 2;
 
 // 👥 30 uživatelů
-const usersToInsert: NewUser[] = Array.from({ length: 30 }).map((_, i) => {
+const usersToInsert: NewUser[] = Array.from({ length: 10 }).map((_, i) => {
 	const id = randomUUID();
 	const name = faker.person.fullName();
 	const email = faker.internet.email({ firstName: name.split(' ')[0] });

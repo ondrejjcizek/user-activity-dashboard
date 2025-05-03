@@ -1,7 +1,10 @@
-// process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
 import { json } from '@sveltejs/kit';
 import * as setCookie from 'set-cookie-parser';
 import { BETTER_AUTH_URL } from '$env/static/private';
+
+if (process.env.NODE_ENV === 'development') {
+	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
 
 export async function POST({ request, cookies }) {
 	try {

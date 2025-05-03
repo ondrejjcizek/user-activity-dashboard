@@ -16,13 +16,29 @@ import {
 	ADMIN_ACCOUNT
 } from '$env/static/private';
 
+if (process.env.NODE_ENV === 'development') {
+	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 const resend = new Resend(RESEND_API_KEY);
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: 'sqlite' }),
 	hooks: {
+		before: createAuthMiddleware(async (ctx) => {
+			if (ctx.path === '/sign-out' && ctx.context?.user) {
+				await db
+					.update(userTable)
+					.set({ status: 'offline', updatedAt: new Date() })
+					.where(eq(userTable.id, ctx.context.user.id));
+				console.log(`👋 User ${ctx.context.user.email} signing out (from BEFORE hook)`);
+			}
+		}),
 		after: createAuthMiddleware(async (ctx) => {
 			console.log('🔥 [BetterAuth after hook] Triggered after action:', ctx.path);
+
+			// 🔥 login / session updates logic already here...
+			// (your online status, login history, role promotion etc.)
 
 			const newSession = ctx.context?.newSession;
 			if (!newSession || !newSession.user?.email) return;
@@ -43,7 +59,7 @@ export const auth = betterAuth({
 					daysBack: 90,
 					minPerDay: 1,
 					maxPerDay: 5,
-					suspicious: true
+					suspicious: false
 				});
 
 				try {
@@ -79,8 +95,6 @@ export const auth = betterAuth({
 				.where(eq(userTable.id, dbUser.id));
 
 			const adminAccounts = ADMIN_ACCOUNT?.split(',') ?? [];
-
-			console.log(adminAccounts);
 
 			if (adminAccounts.includes(email) && dbUser.role !== 'Admin') {
 				console.log(`🛡️ Promoting ${email} to Admin`);

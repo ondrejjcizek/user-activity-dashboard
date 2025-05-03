@@ -10,7 +10,8 @@
 		ChevronLeft,
 		Eye,
 		Search,
-		BookUser
+		BookUser,
+		CircleDot
 	} from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import type { PageServerData } from './$types';
@@ -18,12 +19,13 @@
 	import Chart from 'chart.js/auto';
 	import { subDays, format } from 'date-fns';
 	import { Input } from '$lib/components/ui/input';
-	import { goto, preloadData, pushState } from '$app/navigation';
+	import { goto, invalidateAll, preloadData, pushState } from '$app/navigation';
 	import Fuse from 'fuse.js';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { page } from '$app/state';
 	import UserDetailPage from './[id]/+page.svelte';
 	import { lenisStore as lenis } from '$lib/stores/lenis';
+	import { formatDistanceToNow } from 'date-fns';
 
 	type Props = {
 		data: PageServerData;
@@ -48,6 +50,7 @@
 		role: string | null;
 		loginHistory?: LoginEntry[];
 		suspicious?: boolean;
+		lastActive?: Date | null;
 	};
 
 	const { data }: Props = $props();
@@ -64,7 +67,16 @@
 
 	const filteredUsers = $derived(() => {
 		const q = search.toLowerCase();
-		return q ? fuse.search(q).map((r) => r.item) : (data.users as User[]);
+		const all = q ? fuse.search(q).map((r) => r.item) : (data.users as User[]);
+
+		return all.slice().sort((a, b) => {
+			if (a.status === 'online' && b.status !== 'online') return -1;
+			if (a.status !== 'online' && b.status === 'online') return 1;
+
+			const aTime = a.lastActive ? new Date(a.lastActive).getTime() : 0;
+			const bTime = b.lastActive ? new Date(b.lastActive).getTime() : 0;
+			return bTime - aTime;
+		});
 	});
 
 	const today = new Date();
@@ -173,6 +185,12 @@
 				}
 			});
 		});
+
+		const interval = setInterval(() => {
+			invalidateAll(); // forces a refetch from the load function
+		}, 1000); // 1 second
+
+		return () => clearInterval(interval);
 	});
 
 	function closeDrawer() {
@@ -207,7 +225,7 @@
 </div>
 
 <Card.Root class="w-full">
-	<Card.Header class="flex flex-row flex-wrap items-center justify-between gap-3">
+	<Card.Header class="flex flex-row flex-wrap items-center justify-center gap-3 lg:justify-between">
 		<div class="flex flex-col gap-1">
 			<Card.Title class="flex flex-col items-center gap-2 text-center md:flex-row">
 				<BookUser class="mr-2 h-5 w-5" />
@@ -228,7 +246,7 @@
 	</Card.Header>
 	<Card.Content>
 		<div class="overflow-x-auto rounded-md border">
-			<Table.Root>
+			<Table.Root class="text-xs">
 				<Table.Header>
 					<Table.Row>
 						<Table.Head><UserCheck class="mr-2 inline-block h-4 w-4" />Name</Table.Head>
@@ -245,26 +263,50 @@
 							<Table.Cell class="font-medium">{user.name}</Table.Cell>
 							<Table.Cell>{user.email}</Table.Cell>
 							<Table.Cell>{user.role}</Table.Cell>
-							<Table.Cell>{user.status}</Table.Cell>
+							<Table.Cell>
+								{#if user.status === 'online'}
+									<span class="flex items-center gap-2 font-medium text-green-600">
+										<span class="relative flex h-2 w-2">
+											<span
+												class="animate-ping-slow absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+											></span>
+											<span class="relative inline-flex h-2 w-2 rounded-full bg-green-600"></span>
+										</span>
+										Online
+									</span>
+								{:else}
+									<span class="flex flex-col text-sm text-gray-400">
+										<span class="flex items-center gap-2">
+											<span class="inline-flex h-2 w-2 rounded-full bg-gray-400"></span>
+											Offline
+										</span>
+										{#if user.lastActive}
+											<span class="text-muted-foreground text-xs italic">
+												Last seen {formatDistanceToNow(new Date(user.lastActive))} ago
+											</span>
+										{/if}
+									</span>
+								{/if}
+							</Table.Cell>
 							<Table.Cell>{formatDate(user.createdAt)}</Table.Cell>
 							<Table.Cell>
 								<Button
-									class="h-10 w-10 pt-0 pr-0 pb-0 pl-0"
+									class="h-9 w-9 cursor-pointer p-0 md:h-10 md:w-10"
 									onclick={(e: MouseEvent) => openDrawer(user.id, e)}
 								>
-									<Eye size={20} />
+									<Eye size={16} />
 								</Button>
 							</Table.Cell>
-							<Table.Cell class="flex gap-2">
+							<Table.Cell>
 								<form method="POST" action="?/delete" use:enhance>
 									<input type="hidden" name="id" value={user.id} />
 									<Button
-										class="h-10 w-10 cursor-pointer p-0"
+										class="h-9 w-9 cursor-pointer p-0 md:h-10 md:w-10"
 										type="submit"
 										variant="destructive"
 										aria-label="Delete User"
 									>
-										<Trash size={20} />
+										<Trash size={16} />
 									</Button>
 								</form>
 							</Table.Cell>

@@ -16,6 +16,7 @@
 	import { lenisStore as lenis, setLenisStore } from '$lib/stores/lenis';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { useFrame } from '$lib/lifecycle-functions/useFrame';
+	import PingClient from '$lib/components/PingClient.svelte';
 
 	type Props = {
 		children: Snippet;
@@ -115,6 +116,7 @@
 
 <Toaster {position} duration={4000} richColors />
 <NavigationProgress />
+
 {#key data.url}
 	<main
 		class="relative container mx-auto flex min-h-dvh flex-col items-center justify-center p-6 py-12"
@@ -123,3 +125,7 @@
 		{@render children()}
 	</main>
 {/key}
+
+{#if data.session}
+	<PingClient />
+{/if}

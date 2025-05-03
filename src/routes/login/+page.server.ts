@@ -5,7 +5,6 @@ import { fail, message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { isAPIError } from '$lib/utils';
 
-// ⛑️ Disable cert validation only in dev
 if (process.env.NODE_ENV === 'development') {
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }

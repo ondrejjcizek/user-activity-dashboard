@@ -8,6 +8,9 @@ export const GET = async () => {
 	try {
 		const users = await db.select().from(user);
 
+		const now = Date.now();
+		const ONLINE_THRESHOLD = 5_000;
+
 		const usersWithLogins = await Promise.all(
 			users.map(async (u) => {
 				const historyRaw = await db
@@ -15,13 +18,12 @@ export const GET = async () => {
 					.from(loginHistory)
 					.where(eq(loginHistory.userId, u.id));
 
-				// 🕒 Přetypování date na JS Date objekt
 				const history = historyRaw.map((entry) => ({
 					...entry,
 					date: new Date(entry.date)
 				}));
 
-				// 🔍 Detekce podezřelé aktivity
+				// suspicious login detection
 				const loginMap: Record<string, number> = {};
 				for (const entry of history) {
 					const dateStr = format(entry.date, 'yyyy-MM-dd');
@@ -33,13 +35,18 @@ export const GET = async () => {
 				const totalLogins = loginCounts.reduce((sum, count) => sum + count, 0);
 				const avgPerDay = totalLogins / 30;
 				const spikeDay = loginCounts.some((count) => count >= 15);
-
 				const suspicious = daysWith10Plus >= 3 || (avgPerDay <= 3 && spikeDay);
+
+				const status =
+					u.lastActive && now - new Date(u.lastActive).getTime() < ONLINE_THRESHOLD
+						? 'online'
+						: 'offline';
 
 				return {
 					...u,
 					loginHistory: history,
-					suspicious
+					suspicious,
+					status
 				};
 			})
 		);
