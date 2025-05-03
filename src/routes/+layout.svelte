@@ -57,6 +57,6 @@
 </script>
 
 <Toaster {position} duration={4000} richColors />
-<main class="grid min-h-dvh place-items-center bg-gray-100 p-6 dark:bg-gray-900">
+<main class="flex min-h-dvh flex-col place-items-center bg-gray-100 p-6 pt-16 dark:bg-slate-900">
 	{@render children()}
 </main>

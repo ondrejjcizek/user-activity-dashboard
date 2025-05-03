@@ -4,7 +4,7 @@ import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from '../account/$types';
 
-export const load: PageServerLoad = async ({ locals, cookies }) => {
+export const load: PageServerLoad = async ({ locals, cookies, fetch }) => {
 	const userSession = locals.user as { role?: string } | null;
 
 	if (!userSession || userSession.role !== 'Admin') {
@@ -18,10 +18,13 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 	}
 
 	try {
-		const users = await db.select().from(user);
+		const res = await fetch('/api/users');
+		if (!res.ok) throw new Error('API failed');
+
+		const { users } = await res.json();
 		return { users };
 	} catch (err) {
-		console.error('❌ Failed to load users:', err);
+		console.error('❌ Failed to load users from API:', err);
 		throw redirect(302, '/error');
 	}
 };

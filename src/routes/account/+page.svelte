@@ -17,12 +17,12 @@
 		Globe,
 		MapPin,
 		AlertCircle,
-		LogOut
+		LogOut,
+		TableProperties
 	} from 'lucide-svelte';
 	import { authClient } from '$lib/auth-client';
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import Chart from 'chart.js/auto';
-	// import zoomPlugin from 'chartjs-plugin-zoom';
 
 	type Props = {
 		data: LayoutServerData & PageData;
@@ -50,7 +50,7 @@
 
 	let canvas: HTMLCanvasElement | null = $state(null);
 
-	import { subDays, format, isSameDay } from 'date-fns';
+	import { subDays, format } from 'date-fns';
 
 	const today = new Date();
 	const last90Days = Array.from({ length: 90 }, (_, i) =>
@@ -182,6 +182,17 @@
 		</div>
 	{:else}
 		<div class="flex flex-col gap-12">
+			{#if data.user?.role === 'Admin'}
+				<Button
+					class="absolute top-4 left-4"
+					variant="outline"
+					size="sm"
+					onclick={() => goto('/users')}
+				>
+					<TableProperties class="h-4" />
+					Show All Users
+				</Button>
+			{/if}
 			<!-- User Profile Card -->
 			<Card.Root class="mx-auto w-full max-w-md">
 				<Card.Header class="pb-4">
