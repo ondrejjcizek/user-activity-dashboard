@@ -9,6 +9,9 @@ declare global {
 			session: Session | null;
 			user: User | null;
 		}
+		interface PageState {
+			selected?: import('./routes/users/[id]/$types').PageServerData;
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}

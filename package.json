@@ -46,6 +46,7 @@
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.20.0",
 		"unplugin-fonts": "^1.3.1",
+		"vaul-svelte": "1.0.0-next.7",
 		"vite": "^6.2.5",
 		"vite-plugin-mkcert": "^1.17.8",
 		"zod": "^3.24.3"
@@ -55,6 +56,9 @@
 		"@libsql/client": "^0.15.4",
 		"@lucide/svelte": "^0.503.0",
 		"@tailwindcss/vite": "^4.1.4",
+		"@tanstack/table-core": "^8.21.3",
+		"@vercel/analytics": "^1.5.0",
+		"@vercel/speed-insights": "^1.2.0",
 		"better-auth": "^1.2.7",
 		"chart.js": "^4.4.9",
 		"chartjs-plugin-zoom": "^2.2.0",
@@ -63,9 +67,13 @@
 		"drizzle-orm": "^0.43.1",
 		"fuse.js": "^7.1.0",
 		"jose": "^6.0.10",
+		"lenis": "^1.3.1",
 		"lucide-svelte": "^0.503.0",
+		"overlayscrollbars": "^2.11.1",
+		"overlayscrollbars-svelte": "^0.5.5",
 		"resend": "^4.4.1",
 		"set-cookie-parser": "^2.7.1",
+		"sveltekit": "link:@vercel/analytics/sveltekit",
 		"tailwindcss": "^4.1.4"
 	},
 	"pnpm": {

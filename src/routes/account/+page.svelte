@@ -207,7 +207,7 @@
 							</Badge>
 							{#if data.user?.role === 'Admin'}
 								<Button class="" variant="outline" size="sm" onclick={() => goto('/users')}>
-									<TableProperties class="h-4" />
+									<TableProperties class="mr-2 h-4" size={16} />
 									Show All Users
 								</Button>
 							{/if}

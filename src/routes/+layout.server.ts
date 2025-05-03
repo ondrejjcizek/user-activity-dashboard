@@ -37,6 +37,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 
 	return {
 		session: locals.session,
-		user
+		user,
+		url: url.pathname
 	};
 };

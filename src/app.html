@@ -1,12 +1,28 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		%sveltekit.head%
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
-	</body>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<title>User Activity Dashboard</title>
+	<meta name="description"
+		content="Monitor and analyze user activity in real time with a clean, responsive interface built on SvelteKit and modern tools." />
+	<meta name="keywords"
+		content="SvelteKit, Svelte 5, user dashboard, authentication, Turso, ShadCN UI, Tailwind CSS, real-time analytics" />
+	<meta name="author" content="Ondřej Čížek" />
+	<link rel="icon" type="image/png" href="%sveltekit.assets%/favicon/favicon-96x96.png" sizes="96x96" />
+	<link rel="icon" type="image/svg+xml" href="%sveltekit.assets%/favicon/favicon.svg" />
+	<link rel="shortcut icon" href="%sveltekit.assets%/favicon/favicon.ico" />
+	<link rel="apple-touch-icon" sizes="180x180" href="%sveltekit.assets%/favicon/apple-touch-icon.png" />
+	<meta name="apple-mobile-web-app-title" content="User Activity Dashboard" />
+	<link rel="manifest" href="%sveltekit.assets%/favicon/site.webmanifest" />
+
+	%sveltekit.head%
+</head>
+
+<body data-sveltekit-preload-data="hover" data-overlayscrollbars-initialize>
+	<div style="display: contents">%sveltekit.body%</div>
+</body>
+
 </html>

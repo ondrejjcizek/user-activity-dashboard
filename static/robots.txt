@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap (replace with your actual domain)
+Sitemap: https://yourdomain.com/sitemap.xml
+
+# Optional: Disallow development or utility routes if any
+# Disallow: /admin/
+# Disallow: /api/

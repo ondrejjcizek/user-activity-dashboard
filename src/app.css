@@ -73,8 +73,55 @@ body {
 	border: 0;
 }
 
-::view-transition-old(navigation),
-::view-transition-new(navigation) {
-	animation-duration: 600ms;
-	animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+.os-scrollbar-handle {
+	background: rgba(#ff31c1, 0.25);
+
+	.lenis-stopped & {
+		background: transparent;
+		pointer-events: none;
+	}
+
+	&:hover {
+		background: rgba(#ff31c1, 1);
+
+		.lenis-stopped & {
+			background: transparent;
+			pointer-events: none;
+		}
+	}
+}
+
+.os-scrollbar {
+	opacity: 1 !important;
+	visibility: visible !important;
+	display: block !important;
+	width: 9px !important;
+}
+
+.os-scrollbar-handle {
+	opacity: 1 !important;
+}
+
+html.lenis {
+	height: auto;
+}
+
+html.lenis body {
+	height: auto;
+}
+
+.lenis.lenis-smooth {
+	scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+	overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+	overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+	pointer-events: none;
 }

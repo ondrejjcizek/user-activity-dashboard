@@ -1,11 +1,21 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import 'unfonts.css';
+	import 'overlayscrollbars/styles/overlayscrollbars.css';
 	import '../app.css';
+
+	import type { Snippet } from 'svelte';
 	import type { LayoutServerData } from './$types';
+
+	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { toast } from 'svelte-sonner';
-	import ViewTransition from '$lib/components/ViewTransition.svelte';
+	import { fade } from 'svelte/transition';
+	import NavigationProgress from '$lib/components/NavigationProgress.svelte';
+	import { useOverlayScrollbars } from 'overlayscrollbars-svelte';
+	import { OverlayScrollbars } from 'overlayscrollbars';
+	import Lenis from 'lenis';
+	import { lenisStore as lenis, setLenisStore } from '$lib/stores/lenis';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { useFrame } from '$lib/lifecycle-functions/useFrame';
 
 	type Props = {
 		children: Snippet;
@@ -13,7 +23,8 @@
 	};
 
 	const { children, data }: Props = $props();
-	// $inspect(data);
+
+	const [initialize, instance] = useOverlayScrollbars();
 
 	type Position = 'top-center' | 'bottom-center';
 	const positions = {
@@ -24,6 +35,41 @@
 	let position: Position = $state(positions.desktop);
 
 	$effect(() => {
+		// Lenis
+		const lenisInstance = new Lenis({
+			duration: 0.6,
+			easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+			smoothWheel: true
+		});
+		setLenisStore(lenisInstance);
+
+		beforeNavigate(() => {
+			if ($lenis) {
+				$lenis.stop();
+			}
+		});
+
+		afterNavigate(() => {
+			requestAnimationFrame(() => {
+				$lenis?.start();
+			});
+		});
+
+		function raf(time: number) {
+			lenisInstance.raf(time);
+			requestAnimationFrame(raf);
+		}
+		requestAnimationFrame(raf);
+
+		// Overlay Scrollbars
+		if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+			document.querySelectorAll('[data-overlayscrollbars-initialize]').forEach((element) => {
+				if (element instanceof HTMLElement) {
+					OverlayScrollbars(element, { scrollbars: { autoHide: 'move' } });
+				}
+			});
+		}
+
 		const url = new URL(window.location.href);
 		const error = url.searchParams.get('error');
 
@@ -53,15 +99,27 @@
 		};
 		updatePosition();
 		mediaQuery.addEventListener('change', updatePosition);
-		return () => mediaQuery.removeEventListener('change', updatePosition);
+
+		return () => {
+			lenisInstance.destroy();
+			mediaQuery.removeEventListener('change', updatePosition);
+		};
+	});
+
+	useFrame((time) => {
+		if (typeof time === 'number') {
+			$lenis?.raf(time);
+		}
 	});
 </script>
 
 <Toaster {position} duration={4000} richColors />
-<ViewTransition />
-<main
-	id="main-navigation"
-	class="relative container mx-auto flex min-h-dvh flex-col items-center justify-center p-6 py-12"
->
-	{@render children()}
-</main>
+<NavigationProgress />
+{#key data.url}
+	<main
+		class="relative container mx-auto flex min-h-dvh flex-col items-center justify-center p-6 py-12"
+		transition:fade={{ duration: 300 }}
+	>
+		{@render children()}
+	</main>
+{/key}
