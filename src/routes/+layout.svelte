@@ -5,6 +5,7 @@
 	import '../app.css';
 	import type { LayoutServerData } from './$types';
 	import { toast } from 'svelte-sonner';
+	import ViewTransition from '$lib/components/ViewTransition.svelte';
 
 	type Props = {
 		children: Snippet;
@@ -57,8 +58,10 @@
 </script>
 
 <Toaster {position} duration={4000} richColors />
+<ViewTransition />
 <main
-	class="flex min-h-dvh flex-col items-center justify-center bg-gray-100 p-6 pt-16 dark:bg-slate-900"
+	id="main-navigation"
+	class="relative container mx-auto flex min-h-dvh flex-col items-center justify-center p-6 py-12"
 >
 	{@render children()}
 </main>

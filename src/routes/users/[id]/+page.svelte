@@ -139,7 +139,7 @@
 		<canvas bind:this={canvas} class="h-[300px] w-full max-w-full sm:h-[400px]"></canvas>
 	</div>
 
-	<Card.Root class="w-full">
+	<!-- <Card.Root class="w-full">
 		<Card.Header>
 			<Card.Title class="flex items-center gap-2">
 				<Shield class="h-5 w-5" />
@@ -195,5 +195,5 @@
 				</div>
 			</div>
 		</Card.Content>
-	</Card.Root>
+	</Card.Root> -->
 </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import { Shield, Mail, UserCheck, Calendar, Trash, ChevronLeft } from 'lucide-svelte';
+	import { Shield, Mail, UserCheck, Calendar, Trash, ChevronLeft, Eye } from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import type { PageServerData } from './$types';
 	import { Button } from '$lib/components/ui/button';
@@ -10,7 +10,7 @@
 	import { subDays, format } from 'date-fns';
 	import { Input } from '$lib/components/ui/input';
 	import { goto } from '$app/navigation';
-	import { Label } from '$lib/components/ui/label';
+	import Fuse from 'fuse.js';
 
 	type Props = {
 		data: PageServerData;
@@ -38,16 +38,18 @@
 	};
 
 	const { data }: Props = $props();
-
 	const formatDate = (date: Date) => new Date(date).toLocaleDateString();
 	let canvas: HTMLCanvasElement | null = $state(null);
 	let search = $state('');
 
+	const fuse = new Fuse(data.users as User[], {
+		keys: ['name', 'email'],
+		threshold: 0.3
+	});
+
 	const filteredUsers = $derived(() => {
 		const q = search.toLowerCase();
-		return (data.users as User[]).filter(
-			(user) => user.name.toLowerCase().includes(q) || user.email.toLowerCase().includes(q)
-		);
+		return q ? fuse.search(q).map((r) => r.item) : (data.users as User[]);
 	});
 
 	const today = new Date();
@@ -67,10 +69,7 @@
 
 	const chartLabels = Object.keys(historyMap);
 	const chartData = Object.values(historyMap);
-
-	function isSuspicious(index: number): boolean {
-		return chartData[index] > 65;
-	}
+	const isSuspicious = (index: number) => chartData[index] > 65;
 
 	const backgroundColors = chartData.map((_, i) =>
 		isSuspicious(i) ? 'rgba(239, 68, 68, 0.4)' : 'rgba(99, 102, 241, 0.2)'
@@ -96,7 +95,7 @@
 							fill: true,
 							tension: 0.3,
 							pointBackgroundColor: pointColors,
-							pointRadius: 4,
+							pointRadius: 3,
 							pointHoverRadius: 6
 						}
 					]
@@ -122,8 +121,7 @@
 								label: (ctx) => {
 									const i = ctx.dataIndex;
 									const v = ctx.raw as number;
-									const suspicious = isSuspicious(i);
-									return suspicious ? `Logins: ${v} ⚠️ Suspicious` : `Logins: ${v}`;
+									return isSuspicious(i) ? `Logins: ${v} \u26A0\uFE0F Suspicious` : `Logins: ${v}`;
 								}
 							}
 						},
@@ -143,94 +141,74 @@
 	Back to Account
 </Button>
 
+<h1 class="text-1xl my-4 font-semibold uppercase">All users registered in the system</h1>
+
 <div class="w-full overflow-x-auto pb-8">
 	<canvas bind:this={canvas} class="h-[300px] w-full max-w-full"></canvas>
 </div>
 
-<div class="flex w-full max-w-sm flex-col gap-1.5">
-	<Label for="user">Search User</Label>
-	<Input
-		placeholder="... type name or email"
-		id="user"
-		bind:value={search}
-		oninput={(e) => (search = (e.target as HTMLInputElement).value)}
-		class="mb-4 max-w-sm bg-white dark:bg-black"
-	/>
-</div>
-
 <Card.Root class="w-full">
-	<Card.Header>
-		<Card.Title class="flex items-center">
-			<Shield class="mr-2 h-5 w-5" />
-			User Accounts
-		</Card.Title>
-		<Card.Description>All users registered in the system</Card.Description>
+	<Card.Header class="flex flex-row items-center justify-between">
+		<div class="flex flex-col gap-1">
+			<Card.Title class="flex items-center">
+				<Shield class="mr-2 h-5 w-5" />
+				User Accounts
+			</Card.Title>
+			<Card.Description>All users registered in the system</Card.Description>
+		</div>
+		<Input
+			placeholder="Search by name or email..."
+			id="user"
+			bind:value={search}
+			class="max-w-sm bg-white dark:bg-black"
+		/>
 	</Card.Header>
 	<Card.Content>
-		<div class="rounded-md border">
-			<div class="max-w-[calc(100vw-110px)] overflow-x-auto">
-				<Table.Root>
-					<Table.Header>
-						<Table.Row>
-							<Table.Head>
-								<div class="flex items-center">
-									<UserCheck class="mr-2 h-4 w-4" />
-									Name
-								</div>
-							</Table.Head>
-							<Table.Head>
-								<div class="flex items-center">
-									<Mail class="mr-2 h-4 w-4" />
-									Email
-								</div>
-							</Table.Head>
-							<Table.Head>
-								<div class="flex items-center">Role</div>
-							</Table.Head>
-							<Table.Head>
-								<div class="flex items-center">Status</div>
-							</Table.Head>
-							<Table.Head>
-								<div class="flex items-center">
-									<Calendar class="mr-2 h-4 w-4" />
-									Joined
-								</div>
-							</Table.Head>
-							<Table.Head colspan={2}>
-								<div class="flex items-center justify-center">Actions</div>
-							</Table.Head>
+		<div class="overflow-x-auto rounded-md border">
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head><UserCheck class="mr-2 inline-block h-4 w-4" />Name</Table.Head>
+						<Table.Head><Mail class="mr-2 inline-block h-4 w-4" />Email</Table.Head>
+						<Table.Head>Role</Table.Head>
+						<Table.Head>Status</Table.Head>
+						<Table.Head><Calendar class="mr-2 inline-block h-4 w-4" />Joined</Table.Head>
+						<Table.Head colspan={2}>Actions</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
+					{#each filteredUsers() as user (user.id)}
+						<Table.Row class={user.suspicious ? 'bg-red-50 font-semibold dark:bg-red-400' : ''}>
+							<Table.Cell class="font-medium">{user.name}</Table.Cell>
+							<Table.Cell>{user.email}</Table.Cell>
+							<Table.Cell>{user.role}</Table.Cell>
+							<Table.Cell>{user.status}</Table.Cell>
+							<Table.Cell>{formatDate(user.createdAt)}</Table.Cell>
+							<Table.Cell>
+								<a
+									href={`/users/${user.id}`}
+									class={`${buttonVariants({ variant: 'default' })} h-10 w-10 pt-0 pr-0 pb-0 pl-0`}
+								>
+									<Eye size={20} />
+								</a>
+							</Table.Cell>
+							<Table.Cell class="flex gap-2">
+								<form method="POST" action="?/delete" use:enhance>
+									<input type="hidden" name="id" value={user.id} />
+									<Button
+										class="h-10 w-10 cursor-pointer p-0"
+										type="submit"
+										variant="destructive"
+										aria-label="Delete User"
+									>
+										<Trash size={20} />
+									</Button>
+								</form>
+							</Table.Cell>
 						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#each filteredUsers() as userRaw (userRaw.id)}
-							{@const user = userRaw as User}
-							<Table.Row class={user.suspicious ? 'bg-red-50 font-semibold dark:bg-red-400' : ''}>
-								<Table.Cell class="font-medium">{user.name}</Table.Cell>
-								<Table.Cell>{user.email}</Table.Cell>
-								<Table.Cell>{user.role}</Table.Cell>
-								<Table.Cell>{user.status}</Table.Cell>
-								<Table.Cell>{formatDate(user.createdAt)}</Table.Cell>
-								<Table.Cell>
-									<a href={`/users/${user.id}`} class={buttonVariants({ variant: 'link' })}>
-										View
-									</a>
-								</Table.Cell>
-								<Table.Cell class="flex gap-2">
-									<form method="POST" action="?/delete" use:enhance>
-										<input type="hidden" name="id" value={user.id} />
-										<Button
-											class="flex h-6 cursor-pointer py-4"
-											type="submit"
-											variant="destructive"
-											aria-label="Sign Out"><Trash /></Button
-										>
-									</form>
-								</Table.Cell>
-							</Table.Row>
-						{/each}
-					</Table.Body>
-				</Table.Root>
-			</div>
+					{/each}
+				</Table.Body>
+			</Table.Root>
 		</div>
 	</Card.Content>
 </Card.Root>

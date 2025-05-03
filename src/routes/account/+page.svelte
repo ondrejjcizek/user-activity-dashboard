@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { LayoutServerData } from '../$types';
-	import * as Table from '$lib/components/ui/table/index.js';
+	// import * as Table from '$lib/components/ui/table/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
@@ -13,9 +13,6 @@
 		Clock,
 		Shield,
 		Activity,
-		Smartphone,
-		Globe,
-		MapPin,
 		AlertCircle,
 		LogOut,
 		TableProperties
@@ -182,21 +179,10 @@
 		</div>
 	{:else}
 		<div class="flex flex-col gap-12">
-			{#if data.user?.role === 'Admin'}
-				<Button
-					class="absolute top-4 left-4"
-					variant="outline"
-					size="sm"
-					onclick={() => goto('/users')}
-				>
-					<TableProperties class="h-4" />
-					Show All Users
-				</Button>
-			{/if}
 			<!-- User Profile Card -->
 			<Card.Root class="mx-auto w-full max-w-md">
 				<Card.Header class="pb-4">
-					<div class="flex items-start justify-between gap-4">
+					<div class="relative flex items-start justify-between gap-4">
 						<div class="flex flex-wrap gap-4">
 							<Avatar.Root class="border-primary/10 h-16 w-16 border-2">
 								<Avatar.Image
@@ -216,16 +202,24 @@
 							</div>
 							<Badge variant="secondary">
 								{#if data.session && data.user}
-									<p class="whitespace-nowrap">You are logged in with the {data.user.role} role</p>
+									<p>You are logged as {data.user.role}</p>
 								{/if}
 							</Badge>
+							{#if data.user?.role === 'Admin'}
+								<Button class="" variant="outline" size="sm" onclick={() => goto('/users')}>
+									<TableProperties class="h-4" />
+									Show All Users
+								</Button>
+							{/if}
 						</div>
 						<Button
-							class="h-13 cursor-pointer"
+							class="h-10 min-w-10 cursor-pointer p-0 sm:bottom-[unset]"
 							onclick={signOut}
 							variant="destructive"
-							aria-label="Sign Out"><LogOut /></Button
+							aria-label="Sign Out"
 						>
+							<LogOut size={20} />
+						</Button>
 					</div>
 				</Card.Header>
 				<Card.Content>

@@ -72,3 +72,9 @@ body {
 	clip: rect(0, 0, 0, 0);
 	border: 0;
 }
+
+::view-transition-old(navigation),
+::view-transition-new(navigation) {
+	animation-duration: 600ms;
+	animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}

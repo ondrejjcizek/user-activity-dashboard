@@ -133,7 +133,7 @@
 <div class="flex w-full items-center justify-center">
 	<div class="flex h-auto w-full items-center justify-center scroll-auto">
 		<Card.Root
-			class={`card-content w-full max-w-sm overflow-hidden rounded-lg bg-white p-0 shadow-md transition-[height] duration-1000 ease-in-out md:max-w-md md:p-8 dark:border-gray-400 dark:bg-gray-700`}
+			class={`card-content w-full max-w-sm overflow-hidden p-0 transition-[height] duration-1000 ease-in-out md:max-w-md md:p-8`}
 			style={activeTab === 'register' ? `height: ${cardHeight}` : `height: ${cardHeight}`}
 		>
 			<Card.Header class="text-center">
@@ -203,6 +203,7 @@
 										<Form.Control let:attrs>
 											<Form.Label>First Name</Form.Label>
 											<Input
+												class="text-base"
 												{...attrs}
 												bind:value={$registerUserForm.firstName}
 												placeholder="First Name"
@@ -215,6 +216,7 @@
 										<Form.Control let:attrs>
 											<Form.Label>Last Name</Form.Label>
 											<Input
+												class="text-base"
 												{...attrs}
 												bind:value={$registerUserForm.lastName}
 												placeholder="Last Name"
@@ -227,6 +229,7 @@
 										<Form.Control let:attrs>
 											<Form.Label>Email</Form.Label>
 											<Input
+												class="text-base"
 												{...attrs}
 												bind:value={$registerUserForm.email}
 												placeholder="you@example.com"
@@ -239,6 +242,7 @@
 										<Form.Control let:attrs>
 											<Form.Label>Password</Form.Label>
 											<Input
+												class="text-base"
 												{...attrs}
 												type="password"
 												bind:value={$registerUserForm.password}
@@ -283,6 +287,7 @@
 										<Form.Control let:attrs>
 											<Form.Label>Email</Form.Label>
 											<Input
+												class="text-base"
 												{...attrs}
 												bind:value={$loginUserForm.email}
 												placeholder="you@example.com"
@@ -295,6 +300,7 @@
 										<Form.Control let:attrs>
 											<Form.Label>Password</Form.Label>
 											<Input
+												class="text-base"
 												{...attrs}
 												type="password"
 												bind:value={$loginUserForm.password}

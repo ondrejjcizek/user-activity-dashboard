@@ -3,8 +3,6 @@
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Mail, Calendar, Clock, Shield, Activity } from 'lucide-svelte';
-	import { invalidateAll } from '$app/navigation';
-	import { authClient } from '$lib/auth-client';
 
 	type Props = {
 		user: {
@@ -29,14 +27,9 @@
 		const [first = '', last = ''] = name.split(' ');
 		return (first[0] + (last[0] || '')).toUpperCase();
 	};
-
-	const signOut = async () => {
-		await authClient.signOut();
-		invalidateAll();
-	};
 </script>
 
-<Card.Root class="mx-auto w-full max-w-md">
+<Card.Root class="mx-auto mt-4 w-full max-w-md">
 	<Card.Header class="pb-4">
 		<div class="flex items-start justify-between gap-4">
 			<div class="flex flex-wrap gap-4">
