@@ -88,7 +88,7 @@ export const actions: Actions = {
 				loginForm: form,
 				message: {
 					alertType: 'error',
-					alertText: err.message || 'Login failed'
+					alertText: err.message || 'You need to register first'
 				}
 			});
 		}

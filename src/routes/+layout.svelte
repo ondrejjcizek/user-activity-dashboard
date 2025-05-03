@@ -120,7 +120,7 @@
 {#key data.url}
 	<main class="bg-white dark:bg-black" data-vaul-drawer-wrapper>
 		<div
-			class="relative z-10 container mx-auto flex flex-col items-center justify-center p-6 py-12"
+			class="relative z-10 container mx-auto flex min-h-svh flex-col items-center justify-center p-6 py-12"
 			{...initialize}
 			transition:fade={{ duration: 300 }}
 			data-vaul-drawer-wrapper
