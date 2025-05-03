@@ -78,7 +78,9 @@ export const auth = betterAuth({
 				})
 				.where(eq(userTable.id, dbUser.id));
 
-			const adminAccounts = process.env.ADMIN_ACCOUNTS?.split(',') ?? [];
+			const adminAccounts = ADMIN_ACCOUNT?.split(',') ?? [];
+
+			console.log(adminAccounts);
 
 			if (adminAccounts.includes(email) && dbUser.role !== 'Admin') {
 				console.log(`🛡️ Promoting ${email} to Admin`);
