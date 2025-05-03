@@ -216,7 +216,7 @@
 							</div>
 							<Badge variant="secondary">
 								{#if data.session && data.user}
-									<p>You are logged in with the {data.user.role} role</p>
+									<p class="whitespace-nowrap">You are logged in with the {data.user.role} role</p>
 								{/if}
 							</Badge>
 						</div>
