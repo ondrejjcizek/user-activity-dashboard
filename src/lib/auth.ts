@@ -16,13 +16,10 @@ import {
 	ADMIN_ACCOUNT
 } from '$env/static/private';
 
-if (process.env.NODE_ENV === 'development') {
-	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
-
 const resend = new Resend(RESEND_API_KEY);
 
 export const auth = betterAuth({
+	trustedOrigins: ['https://10.0.0.174:5173', 'https://localhost:5173/'],
 	database: drizzleAdapter(db, { provider: 'sqlite' }),
 	hooks: {
 		before: createAuthMiddleware(async (ctx) => {

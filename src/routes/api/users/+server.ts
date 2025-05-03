@@ -9,7 +9,7 @@ export const GET = async () => {
 		const users = await db.select().from(user);
 
 		const now = Date.now();
-		const ONLINE_THRESHOLD = 5_000;
+		const ONLINE_THRESHOLD = 10_000;
 
 		const usersWithLogins = await Promise.all(
 			users.map(async (u) => {

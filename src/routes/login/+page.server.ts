@@ -5,10 +5,6 @@ import { fail, message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { isAPIError } from '$lib/utils';
 
-if (process.env.NODE_ENV === 'development') {
-	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-}
-
 export const load: ServerLoad = async ({ request }) => {
 	const registerForm = await superValidate(zod(RegisterUserZodSchema));
 	const loginForm = await superValidate(zod(UserLoginZodSchema));
@@ -80,7 +76,7 @@ export const actions: Actions = {
 			let err = { message: 'Login failed' };
 
 			try {
-				err = await res.json(); // ⚠️ pokud to není JSON, try-catch to převezme
+				err = await res.json();
 			} catch (e) {
 				console.log(e);
 				console.warn('⚠️ Failed to parse login response as JSON');

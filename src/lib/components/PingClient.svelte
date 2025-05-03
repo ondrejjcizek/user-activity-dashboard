@@ -6,7 +6,7 @@
 
 		if (navigator.onLine) {
 			ping(); // initial
-			interval = setInterval(ping, 1_000);
+			interval = setInterval(ping, 10_000);
 		}
 
 		return () => clearInterval(interval);

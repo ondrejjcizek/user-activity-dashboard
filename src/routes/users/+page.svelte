@@ -60,14 +60,21 @@
 	let search = $state('');
 	let isDrawerOpen = $state(false);
 
-	const fuse = new Fuse(data.users as User[], {
-		keys: ['name', 'email'],
-		threshold: 0.3
-	});
+	const fuse = $derived(
+		() =>
+			new Fuse(data.users as User[], {
+				keys: ['name', 'email'],
+				threshold: 0.3
+			})
+	);
 
 	const filteredUsers = $derived(() => {
 		const q = search.toLowerCase();
-		const all = q ? fuse.search(q).map((r) => r.item) : (data.users as User[]);
+		const all = q
+			? fuse()
+					.search(q)
+					.map((r) => r.item)
+			: (data.users as User[]);
 
 		return all.slice().sort((a, b) => {
 			if (a.status === 'online' && b.status !== 'online') return -1;
@@ -188,7 +195,7 @@
 
 		const interval = setInterval(() => {
 			invalidateAll(); // forces a refetch from the load function
-		}, 1000); // 1 second
+		}, 10000); // 1 second
 
 		return () => clearInterval(interval);
 	});
