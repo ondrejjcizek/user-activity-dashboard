@@ -131,12 +131,12 @@
 </script>
 
 <div class="flex w-full flex-col items-center justify-center">
-	<h1
+	<!-- <h1
 		class="my-10 flex flex-col items-center gap-2 text-center text-3xl font-bold tracking-tight md:flex-row"
 	>
 		<ShieldCheck class="mr-2 h-8 w-8" size={16} />
 		User Activity Dashboard
-	</h1>
+	</h1> -->
 	<div class="flex h-auto w-full items-center justify-center scroll-auto">
 		<Card.Root
 			class={`card-content w-full max-w-sm overflow-hidden p-0 transition-[height] duration-1000 ease-in-out md:max-w-md md:p-8`}
