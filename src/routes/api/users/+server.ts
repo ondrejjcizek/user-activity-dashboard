@@ -1,10 +1,22 @@
-import { json } from '@sveltejs/kit';
+import { json, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { user, loginHistory } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { format } from 'date-fns';
 
-export const GET = async () => {
+export const GET = async ({ locals, cookies }) => {
+	const userSession = locals.user as { role?: string } | null;
+
+	if (!userSession || userSession.role !== 'Admin') {
+		cookies.set('flash', 'Access denied', {
+			path: '/',
+			maxAge: 5,
+			httpOnly: false
+		});
+
+		throw redirect(302, '/');
+	}
+
 	try {
 		const users = await db.select().from(user);
 

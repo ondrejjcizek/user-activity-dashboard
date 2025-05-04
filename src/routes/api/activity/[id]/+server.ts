@@ -1,11 +1,23 @@
-import { json } from '@sveltejs/kit';
+import { json, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { loginHistory } from '$lib/server/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
-export const GET = async ({ params }) => {
+export const GET = async ({ params, locals, cookies }) => {
 	const userId = params.id;
 	if (!userId) return json({ error: 'Missing user ID' }, { status: 400 });
+
+	const userSession = locals.user as { role?: string } | null;
+
+	if (!userSession || userSession.role !== 'Admin') {
+		cookies.set('flash', 'Access denied', {
+			path: '/',
+			maxAge: 5,
+			httpOnly: false
+		});
+
+		throw redirect(302, '/');
+	}
 
 	const now = new Date();
 	const daysAgo = (days: number) => {
