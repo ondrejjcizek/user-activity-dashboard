@@ -19,7 +19,7 @@ const now = new Date();
 const daysBack = 30;
 const suspiciousUserCount = 1;
 
-// 👥 30 uživatelů
+// 👥 3 uživatelé
 const usersToInsert: NewUser[] = Array.from({ length: 3 }).map((_, i) => {
 	const id = randomUUID();
 	const name = faker.person.fullName();
@@ -30,7 +30,7 @@ const usersToInsert: NewUser[] = Array.from({ length: 3 }).map((_, i) => {
 		name,
 		email,
 		emailVerified: true,
-		image: faker.image.avatar(),
+		image: `https://avatar.iran.liara.run/public/boy?username=${encodeURIComponent(name)}`,
 		createdAt: faker.date.past({ years: 1 }),
 		updatedAt: now,
 		status: faker.helpers.arrayElement(['online', 'offline']),
