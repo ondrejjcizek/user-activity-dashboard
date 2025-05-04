@@ -174,7 +174,7 @@
 </script>
 
 <h1
-	class="my-10 flex flex-col items-center gap-2 text-center text-3xl font-bold tracking-tight md:flex-row"
+	class="mb-6 flex flex-col items-center gap-2 text-center text-xl font-bold tracking-tight md:flex-row lg:text-2xl"
 >
 	<ShieldCheck class="mr-2 h-8 w-8" size={16} />
 	User Activity Dashboard
