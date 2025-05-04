@@ -255,7 +255,7 @@
 				placeholder="Search by name or email..."
 				id="userSearch"
 				bind:value={search}
-				class="bg-white pl-10 dark:bg-black"
+				class="bg-white pl-10 text-base leading-none dark:bg-black"
 			/>
 		</div>
 	</Card.Header>
