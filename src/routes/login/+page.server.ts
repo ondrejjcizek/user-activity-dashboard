@@ -5,6 +5,10 @@ import { fail, message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { isAPIError } from '$lib/utils';
 
+if (process.env.NODE_ENV === 'development') {
+	process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 export const load: ServerLoad = async ({ request }) => {
 	const registerForm = await superValidate(zod(RegisterUserZodSchema));
 	const loginForm = await superValidate(zod(UserLoginZodSchema));

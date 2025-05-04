@@ -15,7 +15,9 @@
 		Activity,
 		AlertCircle,
 		LogOut,
-		TableProperties
+		TableProperties,
+		ShieldUser,
+		ShieldCheck
 	} from 'lucide-svelte';
 	import { authClient } from '$lib/auth-client';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -170,6 +172,13 @@
 		renderChart();
 	});
 </script>
+
+<h1
+	class="my-10 flex flex-col items-center gap-2 text-center text-3xl font-bold tracking-tight md:flex-row"
+>
+	<ShieldCheck class="mr-2 h-8 w-8" size={16} />
+	User Activity Dashboard
+</h1>
 
 <div class="container mx-auto">
 	{#if !data.session}

@@ -11,7 +11,9 @@
 		Eye,
 		Search,
 		BookUser,
-		CircleDot
+		CircleDot,
+		ShieldUser,
+		ShieldAlert
 	} from 'lucide-svelte';
 	import { enhance } from '$app/forms';
 	import type { PageServerData } from './$types';
@@ -22,6 +24,7 @@
 	import { goto, invalidateAll, preloadData, pushState } from '$app/navigation';
 	import Fuse from 'fuse.js';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { page } from '$app/state';
 	import UserDetailPage from './[id]/+page.svelte';
 	import { lenisStore as lenis } from '$lib/stores/lenis';
@@ -195,7 +198,7 @@
 
 		const interval = setInterval(() => {
 			invalidateAll();
-		}, 10000);
+		}, 30000);
 
 		return () => clearInterval(interval);
 	});
@@ -214,12 +217,9 @@
 		shouldScaleBackground
 		setBackgroundColorOnScale={true}
 	>
-		<!-- <Drawer.Portal> -->
-		<!-- <Drawer.Overlay class="fixed inset-0" /> -->
 		<Drawer.Content class="px-6">
 			<UserDetailPage data={page.state.selected} />
 		</Drawer.Content>
-		<!-- </Drawer.Portal> -->
 	</Drawer.Root>
 {/if}
 
@@ -231,7 +231,7 @@
 <h1
 	class="my-10 flex flex-col items-center gap-2 text-center text-3xl font-bold tracking-tight md:flex-row"
 >
-	<Shield class="mr-2 h-7 w-7" size={24} />
+	<ShieldUser class="mr-2 h-7 w-7" size={24} />
 	User Accounts
 </h1>
 
@@ -274,7 +274,7 @@
 				</Table.Header>
 				<Table.Body>
 					{#each filteredUsers() as user (user.id)}
-						<Table.Row class={user.suspicious ? 'bg-red-50 font-semibold dark:bg-red-400' : ''}>
+						<Table.Row class={user.suspicious ? 'bg-red-50 font-medium dark:bg-red-900' : ''}>
 							<Table.Cell class="font-medium">{user.name}</Table.Cell>
 							<Table.Cell>{user.email}</Table.Cell>
 							<Table.Cell>{user.role}</Table.Cell>
@@ -290,7 +290,7 @@
 										Online
 									</span>
 								{:else}
-									<span class="flex flex-col text-sm text-gray-400">
+									<span class="flex flex-col gap-0.5 text-xs text-gray-400">
 										<span class="flex items-center gap-2">
 											<span class="inline-flex h-2 w-2 rounded-full bg-gray-400"></span>
 											Offline
@@ -300,30 +300,54 @@
 												Last seen {formatDistanceToNow(new Date(user.lastActive))} ago
 											</span>
 										{/if}
+										{#if user.suspicious}
+											<span class="text-destructive flex items-center gap-1">
+												<ShieldAlert size={16} />
+												Suspicious activity detected
+											</span>
+										{/if}
 									</span>
 								{/if}
 							</Table.Cell>
 							<Table.Cell>{formatDate(user.createdAt)}</Table.Cell>
 							<Table.Cell>
-								<Button
-									class="h-9 w-9 cursor-pointer p-0 md:h-10 md:w-10"
-									onclick={(e: MouseEvent) => openDrawer(user.id, e)}
-								>
-									<Eye size={16} />
-								</Button>
+								<Tooltip.Provider>
+									<Tooltip.Root>
+										<Tooltip.Trigger>
+											<Button
+												class="h-9 w-9 cursor-pointer p-0 md:h-10 md:w-10"
+												onclick={(e: MouseEvent) => openDrawer(user.id, e)}
+											>
+												<Eye size={16} />
+											</Button>
+										</Tooltip.Trigger>
+										<Tooltip.Content>
+											<p>View</p>
+										</Tooltip.Content>
+									</Tooltip.Root>
+								</Tooltip.Provider>
 							</Table.Cell>
 							<Table.Cell>
-								<form method="POST" action="?/delete" use:enhance>
-									<input type="hidden" name="id" value={user.id} />
-									<Button
-										class="h-9 w-9 cursor-pointer p-0 md:h-10 md:w-10"
-										type="submit"
-										variant="destructive"
-										aria-label="Delete User"
-									>
-										<Trash size={16} />
-									</Button>
-								</form>
+								<Tooltip.Provider>
+									<Tooltip.Root>
+										<Tooltip.Trigger>
+											<form method="POST" action="?/delete" use:enhance>
+												<input type="hidden" name="id" value={user.id} />
+												<Button
+													class="h-9 w-9 cursor-pointer p-0 md:h-10 md:w-10"
+													type="submit"
+													variant="destructive"
+													aria-label="Delete User"
+												>
+													<Trash size={16} />
+												</Button>
+											</form>
+										</Tooltip.Trigger>
+										<Tooltip.Content>
+											<p>Delete</p>
+										</Tooltip.Content>
+									</Tooltip.Root>
+								</Tooltip.Provider>
 							</Table.Cell>
 						</Table.Row>
 					{/each}

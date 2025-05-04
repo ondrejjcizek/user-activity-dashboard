@@ -9,7 +9,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import { MailOpen } from 'lucide-svelte';
+	import { LogIn, MailOpen, ShieldCheck } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import * as Alert from '$lib/components/ui/alert';
 	import { fade } from 'svelte/transition';
@@ -130,7 +130,13 @@
 	});
 </script>
 
-<div class="flex w-full items-center justify-center">
+<div class="flex w-full flex-col items-center justify-center">
+	<h1
+		class="my-10 flex flex-col items-center gap-2 text-center text-3xl font-bold tracking-tight md:flex-row"
+	>
+		<ShieldCheck class="mr-2 h-8 w-8" size={16} />
+		User Activity Dashboard
+	</h1>
 	<div class="flex h-auto w-full items-center justify-center scroll-auto">
 		<Card.Root
 			class={`card-content w-full max-w-sm overflow-hidden p-0 transition-[height] duration-1000 ease-in-out md:max-w-md md:p-8`}
@@ -310,8 +316,9 @@
 										<Form.FieldErrors />
 									</Form.Field>
 									<!-- Login Button -->
-									<Form.Button class="mt-2 flex w-full gap-4" disabled={$loginDelayed}>
+									<Form.Button class="mt-2 flex w-full gap-2" disabled={$loginDelayed}>
 										Log In
+										<LogIn size={16} />
 										{#if $loginDelayed}
 											<Spinner />
 										{/if}
