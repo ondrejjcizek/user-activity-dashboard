@@ -1,4 +1,4 @@
-# Procorp Frontend Test – Admin Dashboard
+# User Activity Dashboard
 
 A modern admin dashboard built with **SvelteKit (Svelte 5)** for managing users and analyzing login activity. The project includes OAuth authentication, a custom UI system, role-based access, and real login analytics powered by Turso and Drizzle ORM.
 
