@@ -7,7 +7,7 @@ A modern admin dashboard built with **SvelteKit (Svelte 5)** for managing users 
 ### 🧪 Live Demo
 
 - 🌐 Production: [dashboard.ondrejcizek.cz](https://dashboard.ondrejcizek.cz)
-- 📦 Repository: [github.com/ondrejjcizek/procorp-frontend-test](https://github.com/ondrejjcizek/procorp-frontend-test)
+- 📦 Repository: [github.com/ondrejjcizek/procorp-frontend-test](https://github.com/ondrejjcizek/user-activity-dashboard)
 
 ---
 
