@@ -2,21 +2,21 @@
 	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
 	import { RegisterUserZodSchema, UserLoginZodSchema } from '$lib/validations/AuthZodSchemas.js';
-	import * as Form from '$lib/components/ui/form';
-	import { Input } from '$lib/components/ui/input';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { tick } from 'svelte';
+	import { fade } from 'svelte/transition';
+	import { toast } from 'svelte-sonner';
+	import * as Form from '$lib/components/ui/form';
+	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import { LogIn, MailOpen, ShieldCheck } from 'lucide-svelte';
-	import { toast } from 'svelte-sonner';
 	import * as Alert from '$lib/components/ui/alert';
-	import { fade } from 'svelte/transition';
 	import { Separator } from '$lib/components/ui/separator';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { LogIn, MailOpen } from 'lucide-svelte';
 	import type { PageServerData } from './$types';
-	import { tick } from 'svelte';
 
 	type Props = {
 		data: PageServerData;
@@ -41,8 +41,8 @@
 		onResult: async ({ result }) => {
 			if (result.type === 'failure') {
 				const data = result.data as any;
-				const msg = data?.message?.alertText || 'Login failed';
-				toast.error(msg);
+				const msg = data?.message?.alertText || 'You need to fill in all fields';
+				toast.info(msg);
 			}
 
 			if (result.type === 'redirect') {
@@ -75,15 +75,35 @@
 		onUpdated: async () => {
 			await tick();
 			updateCardHeight();
+		},
+		onResult: async ({ result }) => {
+			if (result.type === 'failure') {
+				const data = result.data as any;
+				const msg =
+					data?.message?.alertText ||
+					data?.message?.message ||
+					data?.message ||
+					'You need to fill in all fields';
+				toast.info(msg);
+			}
 		}
 	});
 
 	const {
 		form: registerUserForm,
 		message: registerMessage,
-		enhance: registerUserEnhance,
+		enhance: baseRegisterEnhance,
 		delayed: registerDelayed
 	} = registerForm;
+
+	const registerUserEnhance = (el: HTMLFormElement) =>
+		baseRegisterEnhance(el, {
+			onResult: async ({ result }) => {
+				if (result.type === 'success') {
+					await new Promise((resolve) => setTimeout(resolve, 2000));
+				}
+			}
+		});
 
 	const signInGoogle = () => {
 		isGoogleSigningIn = true;

@@ -33,7 +33,7 @@
 
 	type Position = 'top-center' | 'bottom-center';
 	const positions = {
-		mobile: 'bottom-center',
+		mobile: 'top-center',
 		desktop: 'top-center'
 	} as const;
 

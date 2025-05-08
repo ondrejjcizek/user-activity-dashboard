@@ -50,9 +50,19 @@ export const actions: Actions = {
 		} catch (err) {
 			console.error('🔥 Signup error:', err);
 
-			if (isAPIError(err) && err.body?.code === 'USER_ALREADY_EXISTS') {
-				form.errors.email = ['This email is already registered. Try logging in instead.'];
-				return fail(422, { form });
+			if (isAPIError(err)) {
+				if (err.body?.code === 'USER_ALREADY_EXISTS') {
+					form.errors.email = ['This email is already registered. Try logging in instead.'];
+					return fail(422, { form });
+				}
+
+				return fail(400, {
+					form,
+					message: {
+						alertType: 'error',
+						alertText: (err.body as { message?: string }).message || 'Something went wrong.'
+					}
+				});
 			}
 
 			return message(form, {
@@ -97,7 +107,6 @@ export const actions: Actions = {
 			});
 		}
 
-		// Success → redirect
 		throw redirect(303, '/account');
 	}
 };
