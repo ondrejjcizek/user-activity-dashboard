@@ -17,15 +17,19 @@
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { useFrame } from '$lib/lifecycle-functions/useFrame';
 	import PingClient from '$lib/components/PingClient.svelte';
+	import { Moon, Sun } from 'lucide-svelte';
+	import { setMode, resetMode, ModeWatcher, mode } from 'mode-watcher';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 
 	type Props = {
 		children: Snippet;
 		data: LayoutServerData;
 	};
 
-	const { children, data }: Props = $props();
+	let { children, data }: Props = $props();
 
-	const [initialize, instance] = useOverlayScrollbars();
+	const [initialize] = useOverlayScrollbars();
 
 	type Position = 'top-center' | 'bottom-center';
 	const positions = {
@@ -116,15 +120,34 @@
 
 <Toaster {position} duration={4000} richColors />
 <NavigationProgress />
+<ModeWatcher defaultMode="system" />
 
 {#key data.url}
-	<main class="bg-white dark:bg-black" data-vaul-drawer-wrapper>
+	<main class="bg-background text-foreground" data-vaul-drawer-wrapper>
 		<div
 			class="relative z-10 container mx-auto flex min-h-svh flex-col items-center justify-center p-6 py-12"
 			{...initialize}
 			transition:fade={{ duration: 300 }}
 			data-vaul-drawer-wrapper
 		>
+			<div class="absolute top-4 right-4">
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger class={buttonVariants({ variant: 'outline', size: 'icon' })}>
+						<Sun
+							class="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:hidden dark:scale-0 dark:-rotate-90"
+						/>
+						<Moon
+							class="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
+						/>
+						<span class="sr-only">Toggle theme</span>
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end">
+						<DropdownMenu.Item onclick={() => setMode('light')}>Light</DropdownMenu.Item>
+						<DropdownMenu.Item onclick={() => setMode('dark')}>Dark</DropdownMenu.Item>
+						<DropdownMenu.Item onclick={() => resetMode()}>System</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			</div>
 			{@render children()}
 		</div>
 	</main>

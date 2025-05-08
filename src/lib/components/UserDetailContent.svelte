@@ -38,11 +38,14 @@
 
 	const chartLabels = Object.keys(historyMap);
 	const chartData = Object.values(historyMap);
+	const isSuspicious = (index: number) => chartData[index] > 65;
 
-	const backgroundColors = chartData.map((val) =>
-		val >= 8 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(99, 102, 241, 0.2)'
+	const backgroundColors = chartData.map((_, i) =>
+		isSuspicious(i) ? 'rgba(239, 68, 68, 0.4)' : 'rgba(99, 102, 241, 0.2)'
 	);
-	const pointColors = chartData.map((val) => (val >= 8 ? 'rgb(239, 68, 68)' : 'rgb(99, 102, 241)'));
+	const pointColors = chartData.map((_, i) =>
+		isSuspicious(i) ? 'rgb(239, 68, 68)' : 'rgb(99, 102, 241)'
+	);
 
 	$effect(() => {
 		(async () => {

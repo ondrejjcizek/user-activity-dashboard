@@ -71,12 +71,13 @@
 	const chartLabels = Object.keys(historyMap).slice(-sliceDays);
 	const chartData = Object.values(historyMap).slice(-sliceDays);
 
-	const backgroundColors = chartData.map((val) =>
-		val >= 8 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(99, 102, 241, 0.2)'
-	);
+	const isSuspicious = (index: number) => chartData[index] > 65;
 
-	const pointBackgroundColors = chartData.map((val) =>
-		val >= 8 ? 'rgb(239, 68, 68)' : 'rgb(99, 102, 241)'
+	const backgroundColors = chartData.map((_, i) =>
+		isSuspicious(i) ? 'rgba(239, 68, 68, 0.4)' : 'rgba(99, 102, 241, 0.2)'
+	);
+	const pointBackgroundColors = chartData.map((_, i) =>
+		isSuspicious(i) ? 'rgb(239, 68, 68)' : 'rgb(99, 102, 241)'
 	);
 
 	$effect(() => {

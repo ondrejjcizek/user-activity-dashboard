@@ -274,7 +274,7 @@
 				</Table.Header>
 				<Table.Body>
 					{#each filteredUsers() as user (user.id)}
-						<Table.Row class={user.suspicious ? 'bg-red-50 font-medium dark:bg-red-900' : ''}>
+						<Table.Row>
 							<Table.Cell class="font-medium">{user.name}</Table.Cell>
 							<Table.Cell>{user.email}</Table.Cell>
 							<Table.Cell>{user.role}</Table.Cell>

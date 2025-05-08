@@ -14,9 +14,6 @@ importers:
       '@libsql/client':
         specifier: ^0.15.4
         version: 0.15.4
-      '@lucide/svelte':
-        specifier: ^0.503.0
-        version: 0.503.0(svelte@5.28.2)
       '@tailwindcss/vite':
         specifier: ^4.1.4
         version: 4.1.4(vite@6.3.3(@types/node@22.15.2)(jiti@2.4.2)(lightningcss@1.29.2))
@@ -84,6 +81,9 @@ importers:
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.25.1
+      '@lucide/svelte':
+        specifier: ^0.503.0
+        version: 0.503.0(svelte@5.28.2)
       '@sveltejs/adapter-vercel':
         specifier: ^5.7.0
         version: 5.7.0(@sveltejs/kit@2.20.7(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.28.2)(vite@6.3.3(@types/node@22.15.2)(jiti@2.4.2)(lightningcss@1.29.2)))(svelte@5.28.2)(vite@6.3.3(@types/node@22.15.2)(jiti@2.4.2)(lightningcss@1.29.2)))(rollup@4.40.0)
@@ -124,8 +124,8 @@ importers:
         specifier: ^16.0.0
         version: 16.0.0
       mode-watcher:
-        specifier: ^1.0.2
-        version: 1.0.2(svelte@5.28.2)
+        specifier: ^1.0.6
+        version: 1.0.6(svelte@5.28.2)
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
@@ -2187,8 +2187,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  mode-watcher@1.0.2:
-    resolution: {integrity: sha512-b3ghU4F4kZeRHHPlsVeCltBgYRHNr7HNyT9JTlvIIvuob7Vulu7iKCfaKNU4FGugBIFWyK5q4bDhqCeZy3Cuxw==}
+  mode-watcher@1.0.6:
+    resolution: {integrity: sha512-6bG6KfPPaZoaw523rLR3z8dlCK/dskIBv7z7qdRPizD5b5BDYyCCLQ33FSCRTd7Ai3i7FWIBuXCZaF5IVVC3GQ==}
     peerDependencies:
       svelte: ^5.27.0
 
@@ -4636,7 +4636,7 @@ snapshots:
 
   mkdirp@3.0.1: {}
 
-  mode-watcher@1.0.2(svelte@5.28.2):
+  mode-watcher@1.0.6(svelte@5.28.2):
     dependencies:
       runed: 0.25.0(svelte@5.28.2)
       svelte: 5.28.2
